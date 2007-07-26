@@ -836,7 +836,7 @@ begin
       HelpTextParts[1] :=
          TGLWindow.ParseParametersHelp(StandardParseOptions, true) +nl+
          nl+
-         SCamelotProgramHelpSuffix(DisplayProgramName, Version, true);
+         SVrmlEngineProgramHelpSuffix(DisplayProgramName, Version, true);
       { I can't simply construct HelpTextParts "on the fly" when
         calling InfoWriteParts due to bugs in FPC 1.9.6, already fixed
         in FPC 1.9.7 from 2005-02-01. }
