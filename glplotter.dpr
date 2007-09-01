@@ -42,7 +42,7 @@ uses
   SysUtils, OpenGLh, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
   KambiClassUtils, GLWinMessages, GLW_Demo, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
-  KambiStringUtils, KambiFilesUtils;
+  KambiStringUtils, KambiFilesUtils, MathExpr, MathExprParser;
 
 {$define read_interface}
 {$define read_implementation}
@@ -100,6 +100,7 @@ type
   private
     FVisible: boolean;
     procedure SetVisible(const Value: boolean);
+    procedure CreateCommon(AColorNumber: Integer);
   public
     MenuItem: TMenuItemChecked;
     Points: TDynXYArray;
@@ -114,32 +115,75 @@ type
       present in PointsFile) then it will be used.
 
       @param AColorNumber color number (see TColorItem), counted from 0. }
-    constructor Create(const FileName: string;
-      AColorNumber: Integer); overload;
+    constructor CreateFromFile(const FileName: string;
+      AColorNumber: Integer);
+
+    { Initialize TGraph using function Expression. }
+    constructor CreateFromExpression(const Expression: string;
+      const X1Str, X2Str, XStepStr: string;
+      AColorNumber: Integer);
+
     destructor Destroy; override;
   end;
 
-constructor TGraph.Create(const FileName: string; AColorNumber: Integer);
+procedure TGraph.CreateCommon(AColorNumber: Integer);
+begin
+  { calculate Color }
+  if AColorNumber < IloscGraphKol then
+    Color := ColorScheme^[TColorItem(Ord(ciGraph1) + AColorNumber)]^ else
+  repeat
+    Color := Vector3f(Random, Random, Random);
+    { Don't allow too dark colors, as they are not visible... }
+  until BWColorValue(Color) >= 0.2;
 
-  procedure CreateFromReader(PointsFile: TTextReader; const AName: string;
-    AColorNumber: Integer);
+  { initialize Points }
+  Points := TDynXYArray.Create;
+
+  FVisible := true;
+end;
+
+constructor TGraph.CreateFromExpression(const Expression: string;
+  const X1Str, X2Str, XStepStr: string; AColorNumber: Integer);
+var
+  I: Integer;
+  Expr: TMathExpr;
+  X1, X2, XStep: Extended;
+begin
+  inherited Create;
+  CreateCommon(AColorNumber);
+
+  X1 := EvalConstMathExpr(X1Str);
+  X2 := EvalConstMathExpr(X2Str);
+  XStep := EvalConstMathExpr(XStepStr);
+
+  Name := Expression;
+
+  Expr := ParseMathExpr(Expression);
+  try
+    Points.Count := Floor((X2 - X1) / XStep);
+    for I := 0 to Points.Count - 1 do
+    begin
+      { calculate each time X as X1 + I * XStep, this is numerically stable
+        (contrary to X += XStep each time. that cummulates errors)  }
+      SingleVariable := X1 + I * XStep;
+      Points.Items[I].X := SingleVariable;
+      Points.Items[I].Break := not Expr.TryValue(
+        @ReturnSingleVariable, Points.Items[I].Y);
+    end;
+  finally FreeAndNil(Expr) end;
+end;
+
+constructor TGraph.CreateFromFile(const FileName: string; AColorNumber: Integer);
+
+  procedure CreateFromReader(PointsFile: TTextReader; const AName: string);
   var line: string;
       xy: TXY;
   const SNameLine = 'name=';
         SBreakLine = 'break';
   begin
-   if AColorNumber < IloscGraphKol then
-     Color := ColorScheme^[TColorItem(Ord(ciGraph1) + AColorNumber)]^ else
-   repeat
-     Color := Vector3f(Random, Random, Random);
-     { Don't allow too dark colors, as they are not visible... }
-   until BWColorValue(Color) >= 0.2;
-
-   Points := TDynXYArray.Create;
    Points.AllowedCapacityOverflow := 100;
 
    Name := AName;
-   FVisible := true;
 
    { load Points from PointsFile }
    while not PointsFile.Eof do
@@ -170,13 +214,14 @@ var
   Reader: TTextReader;
 begin
  inherited Create;
+ CreateCommon(AColorNumber);
 
  if FileName = '-' then
-  CreateFromReader(StdInReader, 'stdin', AColorNumber) else
+  CreateFromReader(StdInReader, 'stdin') else
  begin
   Reader := TTextReader.CreateFromFileStream(FileName);
   try
-   CreateFromReader(Reader, FileName, AColorNumber);
+   CreateFromReader(Reader, FileName);
   finally FreeAndNil(Reader) end;
  end;
 end;
@@ -352,9 +397,11 @@ procedure UpdateGraphsMenu;
 var
   I: Integer;
   CharKey: char;
+const
+  GraphsListPrefixNumber = 5;
 begin
-  while GraphsListMenu.EntriesCount > 3 do
-    GraphsListMenu.EntryDelete(3);
+  while GraphsListMenu.EntriesCount > GraphsListPrefixNumber do
+    GraphsListMenu.EntryDelete(GraphsListPrefixNumber);
 
   for I := 0 to Graphs.Count-1 do
   begin
@@ -369,22 +416,49 @@ begin
   end;
 end;
 
-{ This creates new TGraph instance and adds it to Graphs list.
+{ This creates new TGraph instance using CreateFromFile
+  and adds it to Graphs list.
   If loading graph from file fails, it will display nice MessageOK dialog.
 
   It also takes care of setting AColorNumer parameter for TGraph.Create
   as it should be. }
-procedure GraphsAdd(const FileName: string);
+procedure GraphsAddFromFile(const FileName: string);
 var
   G: TGraph;
 begin
   try
-    G := TGraph.Create(FileName, Graphs.Count);
+    G := TGraph.CreateFromFile(FileName, Graphs.Count);
   except
     on E: Exception do
     begin
       MessageOK(Glw, Format('Error when opening graph from file "%s": %s',
         [FileName, E.Message]), taLeft);
+      Exit;
+    end;
+  end;
+
+  Graphs.Add(G);
+end;
+
+{ This creates new TGraph instance using CreateFromExpression
+  and adds it to Graphs list.
+  If parsing expression fails, it will display nice MessageOK dialog.
+
+  It also takes care of setting AColorNumer parameter for TGraph.Create
+  as it should be. }
+procedure GraphsAddFromExpression(const Expression: string;
+  const X1, X2, XStep: string);
+var
+  G: TGraph;
+begin
+  try
+    G := TGraph.CreateFromExpression(Expression, X1, X2, XStep, Graphs.Count);
+  except
+    on E: EMathSyntaxError do
+    begin
+      MessageOK(Glw, Format(
+        'Error when parsing function expression at position %d: %s',
+        [E.LexerTextPos, E.Message]), taLeft);
       Exit;
     end;
   end;
@@ -662,7 +736,7 @@ procedure Idle(glwin: TGLWindow);
     I: integer;
   begin
     for I := 1 to Parameters.High do
-      GraphsAdd(Parameters[I]);
+      GraphsAddFromFile(Parameters[I]);
   end;
 
 begin
@@ -738,29 +812,39 @@ end;
 
 function GetMainMenu(): TMenu;
 var
-  M: TMenu;
+  M, M2: TMenu;
   bo: TBoolOption;
 begin
  Result := TMenu.Create('Main menu');
  M := TMenu.Create('_File');
-   M.Append(TMenuItem.Create('_Open graph ...', 101, CtrlO));
-   M.Append(TMenuItem.Create('_Add graph ...', 102, CtrlA));
+   M.Append(TMenuItem.Create('_Open graph from file ...', 101, CtrlO));
+   M.Append(TMenuItem.Create('_Add graph from file ...', 102, CtrlA));
+   M.Append(TMenuSeparator.Create);
+   M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
+   Result.Append(M);
+ M := TMenu.Create('_Functions');
+   M.Append(TMenuItem.Create('_Open graph with function ...', 201));
+   M.Append(TMenuItem.Create('_Add graph with function ...', 202));
+   M.Append(TMenuSeparator.Create);
+   M2 := TMenu.Create('Add graph with _sample function');
+     M2.Append(TMenuItem.Create('_sin(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 203));
+     M2.Append(TMenuItem.Create('_cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 204));
+     M2.Append(TMenuItem.Create('[sin(x) > cos(x)] (on [-10 * Pi, 10 * Pi], with 0.1 step)', 205));
+   M.Append(M2);
+   Result.Append(M);
+ M := TMenu.Create('_Graphs');
+   M.Append(TMenuItem.Create('_Hide all graphs',      30));
+   M.Append(TMenuItem.Create('_Show all graphs',      31));
    M.Append(TMenuSeparator.Create);
    M.Append(TMenuItem.Create('_Close all graphs', 103));
    M.Append(TMenuSeparator.Create);
-   M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
+   GraphsListMenu := M;
    Result.Append(M);
  M := TMenu.Create('_View');
    for bo := Low(bo) to High(bo) do
     M.Append(TMenuItemChecked.Create(
       BoolOptionsMenuNames[bo], 900+Ord(bo), BoolOptionsKeys[bo],
       BoolOptions[bo], true));
-   Result.Append(M);
- M := TMenu.Create('_Graphs');
-   M.Append(TMenuItem.Create('_Hide all graphs',      30));
-   M.Append(TMenuItem.Create('_Show all graphs',      31));
-   M.Append(TMenuSeparator.Create);
-   GraphsListMenu := M;
    Result.Append(M);
  M := TMenu.Create('_Other');
    M.Append(TMenuItem.Create('_Restore default view',     21, K_Home));
@@ -783,7 +867,7 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
    glwin.PostRedisplay;
   end;
 
-  procedure OpenGraph;
+  procedure OpenGraphFromFile;
   var
     FileName: string;
   begin
@@ -791,24 +875,81 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
     if Glwin.FileDialog('Open graph from file', FileName, true) then
     begin
       Graphs.FreeContents;
-      GraphsAdd(FileName);
+      GraphsAddFromFile(FileName);
       UpdateGraphsMenu;
       HomeState;
     end;
   end;
 
-  procedure AddGraph;
+  procedure AddGraphFromFile;
   var
     FileName: string;
   begin
     FileName := '';
     if Glwin.FileDialog('Add graph from file', FileName, true) then
     begin
-      GraphsAdd(FileName);
+      GraphsAddFromFile(FileName);
       UpdateGraphsMenu;
       { Calling HomeState is not desirable here, maybe user wants to keep
         previous view settings, to see already existing graphs as they were. }
     end;
+  end;
+
+  function GetExpression(out Expression: string;
+    out X1, X2, XStep: string): boolean;
+  const
+    SYouCan = nl + nl + '(You can use any constant mathematical expression here, ' +
+      'e.g. try "10 * Pi")';
+  begin
+    Expression := '';
+    X1 := '0';
+    X2 := '1';
+    XStep := '0.1';
+    Result :=
+      MessageInputQuery(Glwin,
+        'Function expression :' + nl + nl +
+        '(x is the function argument, e.g. "x * 2")',
+        Expression, taLeft) and
+      MessageInputQuery(Glwin, 'First X value :' + SYouCan, X1, taLeft) and
+      MessageInputQuery(Glwin, 'Last X value :'  + SYouCan, X2, taLeft) and
+      MessageInputQuery(Glwin, 'X value step :'  + SYouCan, XStep, taLeft);
+  end;
+
+  procedure OpenGraphFromExpression;
+  var
+    Expression: string;
+    X1, X2, XStep: string;
+  begin
+    if GetExpression(Expression, X1, X2, XStep) then
+    begin
+      Graphs.FreeContents;
+      GraphsAddFromExpression(Expression, X1, X2, XStep);
+      UpdateGraphsMenu;
+      HomeState;
+    end;
+  end;
+
+  procedure AddGraphFromExpression;
+  var
+    Expression: string;
+    X1, X2, XStep: string;
+  begin
+    if GetExpression(Expression, X1, X2, XStep) then
+    begin
+      GraphsAddFromExpression(Expression, X1, X2, XStep);
+      UpdateGraphsMenu;
+      { Calling HomeState is not desirable here, maybe user wants to keep
+        previous view settings, to see already existing graphs as they were. }
+    end;
+  end;
+
+  procedure AddSampleGraphFromExpression(const Expression: string;
+    const X1, X2, XStep: string);
+  begin
+    GraphsAddFromExpression(Expression, X1, X2, XStep);
+    UpdateGraphsMenu;
+    { Calling HomeState is not desirable here, maybe user wants to keep
+      previous view settings, to see already existing graphs as they were. }
   end;
 
   procedure CloseAllGraphs;
@@ -841,9 +982,15 @@ begin
   30: SetVisibleAll(false);
   31: SetVisibleAll(true);
 
-  101: OpenGraph;
-  102: AddGraph;
+  101: OpenGraphFromFile;
+  102: AddGraphFromFile;
   103: CloseAllGraphs;
+
+  201: OpenGraphFromExpression;
+  202: AddGraphFromExpression;
+  203: AddSampleGraphFromExpression('sin(x)'           , '-10 * Pi', '10 * Pi', '0.1');
+  204: AddSampleGraphFromExpression('cos(x)'           , '-10 * Pi', '10 * Pi', '0.1');
+  205: AddSampleGraphFromExpression('[sin(x) > cos(x)]', '-10 * Pi', '10 * Pi', '0.1');
 
   900..999:
     begin
