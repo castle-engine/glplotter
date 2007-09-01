@@ -47,6 +47,39 @@ uses
 {$define read_interface}
 {$define read_implementation}
 
+{ colors -------------------------------------------------------------------- }
+
+type
+  { pomiedzy ciGraph1 a ciGraphMax musza byc kolejne ciGraph* }
+  TColorItem = (ciBG, ciOsieXY, ciCrosshair,
+    ciGrid1,      ciPodzialka1,      ciLiczby1,
+    ciGridPi,     ciPodzialkaPi,     ciLiczbyPi,
+    ciGridCustom, ciPodzialkaCustom, ciLiczbyCustom,
+    ciGraph1, ciGraph2, ciGraph3);
+  TColorScheme = array[TColorItem]of PVector3f;
+  PColorScheme = ^TColorScheme;
+
+const
+  ciGraphMax = ciGraph3;
+  IloscGraphKol = Ord(ciGraphMax)-Ord(ciGraph1)+1;
+
+  { zestawy kolorow : }
+  ColorSchemeDark: TColorScheme=
+  ( @Black3Single, @LightBlue3Single, @White3Single,
+    @DarkGreen3Single, @DarkGreen3Single, @Green3Single,
+    @DarkBrown3Single, @DarkBrown3Single, @Brown3Single,
+    @Blue3Single, @Blue3Single, @LightBlue3Single,
+    @Yellow3Single, @Red3Single, @LightGray3Single);
+  ColorSchemeLight: TColorScheme=
+  ( @White3Single, @Blue3Single, @Green3Single,
+    @Yellow3Single, @Yellow3Single, @Green3Single,
+    @Orange3Single, @Orange3Single, @Brown3Single,
+    @Orange3Single, @Orange3Single, @Orange3Single,
+    @Black3Single, @Green3Single, @LightGray3Single);
+
+var
+  ColorScheme: PColorScheme = @ColorSchemeDark;
+
 { TGraph --------------------------------------------------------------------- }
 
 type
@@ -73,67 +106,77 @@ type
     Color: TVector3f;
     Name: string;
     property Visible: boolean read FVisible write SetVisible;
-    { Initialize TGraph reading Points from PointsFile.
-      If line "name=..." is present in PointsFile then it will be used
-      instead of AName. }
-    constructor Create(PointsFile: TTextReader; const AName: string;
-      const AColor: TVector3f); overload;
-    { Initialize TGraph reading Points from file fname.
-      fname = '-' means stdin. }
-    constructor Create(const fname: string; const AColor: TVector3f); overload;
+
+    { Initialize TGraph reading Points from file FileName.
+      FileName = '-' means stdin.
+
+      Graph name will be taken from FileName, or (if line "name=..." is
+      present in PointsFile) then it will be used.
+
+      @param AColorNumber color number (see TColorItem), counted from 0. }
+    constructor Create(const FileName: string;
+      AColorNumber: Integer); overload;
     destructor Destroy; override;
   end;
 
-constructor TGraph.Create(PointsFile: TTextReader; const AName: string;
-  const AColor: TVector3f);
-var line: string;
-    xy: TXY;
-const SNameLine = 'name=';
-      SBreakLine = 'break';
+constructor TGraph.Create(const FileName: string; AColorNumber: Integer);
+
+  procedure CreateFromReader(PointsFile: TTextReader; const AName: string;
+    AColorNumber: Integer);
+  var line: string;
+      xy: TXY;
+  const SNameLine = 'name=';
+        SBreakLine = 'break';
+  begin
+   if AColorNumber < IloscGraphKol then
+     Color := ColorScheme^[TColorItem(Ord(ciGraph1) + AColorNumber)]^ else
+   repeat
+     Color := Vector3f(Random, Random, Random);
+     { Don't allow too dark colors, as they are not visible... }
+   until BWColorValue(Color) >= 0.2;
+
+   Points := TDynXYArray.Create;
+   Points.AllowedCapacityOverflow := 100;
+
+   Name := AName;
+   FVisible := true;
+
+   { load Points from PointsFile }
+   while not PointsFile.Eof do
+   begin
+    line := PointsFile.Readln;
+    line := Trim(line);
+
+    if (line = '') or (line[1] = '#') then
+     {to jest komentarz; wiec nic nie rob} else
+    if IsPrefix(SNameLine, line) then
+    begin
+     Name := SEnding(line, Length(SNameLine)+1); {to jest name=}
+    end else
+    begin
+     xy.Break := SameText(line, SBreakLine);
+     { stworz nowy punkt, chyba ze to jest linia z breakiem i (poprzednia linia
+       tez byla z breakiem lub nie bylo poprzednej linii) }
+     if not (xy.Break and ((Points.Count = 0) or Points.Items[Points.High].Break) ) then
+     begin
+      if not xy.Break then DeFormat(line, '%f %f', [@xy.x, @xy.y]);
+      Points.AppendItem(xy);
+     end;
+    end;
+   end;
+  end;
+
+var
+  Reader: TTextReader;
 begin
  inherited Create;
 
- Points := TDynXYArray.Create;
- Points.AllowedCapacityOverflow := 100;
-
- Color := AColor;
- Name := AName;
- FVisible := true;
-
- { load Points from PointsFile }
- while not PointsFile.Eof do
+ if FileName = '-' then
+  CreateFromReader(StdInReader, 'stdin', AColorNumber) else
  begin
-  line := PointsFile.Readln;
-  line := Trim(line);
-
-  if (line = '') or (line[1] = '#') then
-   {to jest komentarz; wiec nic nie rob} else
-  if IsPrefix(SNameLine, line) then
-  begin
-   Name := SEnding(line, Length(SNameLine)+1); {to jest name=}
-  end else
-  begin
-   xy.Break := SameText(line, SBreakLine);
-   { stworz nowy punkt, chyba ze to jest linia z breakiem i (poprzednia linia
-     tez byla z breakiem lub nie bylo poprzednej linii) }
-   if not (xy.Break and ((Points.Count = 0) or Points.Items[Points.High].Break) ) then
-   begin
-    if not xy.Break then DeFormat(line, '%f %f', [@xy.x, @xy.y]);
-    Points.AppendItem(xy);
-   end;
-  end;
- end;
-end;
-
-constructor TGraph.Create(const fname: string; const AColor: TVector3f);
-var Reader: TTextReader;
-begin
- if fname = '-' then
-  Create(StdInReader, 'stdin', AColor) else
- begin
-  Reader := TTextReader.CreateFromFileStream(fname);
+  Reader := TTextReader.CreateFromFileStream(FileName);
   try
-   Create(Reader, fname, AColor);
+   CreateFromReader(Reader, FileName, AColorNumber);
   finally FreeAndNil(Reader) end;
  end;
 end;
@@ -200,39 +243,6 @@ const
     'Grid Custom', 'Podzialka Custom', 'LiczbyCustom',
     'Only Points');
 
-{ colors -------------------------------------------------------------------- }
-
-type
-  { pomiedzy ciGraph1 a ciGraphMax musza byc kolejne ciGraph* }
-  TColorItem = (ciBG, ciOsieXY, ciCrosshair,
-    ciGrid1,      ciPodzialka1,      ciLiczby1,
-    ciGridPi,     ciPodzialkaPi,     ciLiczbyPi,
-    ciGridCustom, ciPodzialkaCustom, ciLiczbyCustom,
-    ciGraph1, ciGraph2, ciGraph3);
-  TColorScheme = array[TColorItem]of PVector3f;
-  PColorScheme = ^TColorScheme;
-
-const
-  ciGraphMax = ciGraph3;
-  IloscGraphKol = Ord(ciGraphMax)-Ord(ciGraph1)+1;
-
-  { zestawy kolorow : }
-  ColorSchemeDark: TColorScheme=
-  ( @Black3Single, @LightBlue3Single, @White3Single,
-    @DarkGreen3Single, @DarkGreen3Single, @Green3Single,
-    @DarkBrown3Single, @DarkBrown3Single, @Brown3Single,
-    @Blue3Single, @Blue3Single, @LightBlue3Single,
-    @Yellow3Single, @Red3Single, @LightGray3Single);
-  ColorSchemeLight: TColorScheme=
-  ( @White3Single, @Blue3Single, @Green3Single,
-    @Yellow3Single, @Yellow3Single, @Green3Single,
-    @Orange3Single, @Orange3Single, @Brown3Single,
-    @Orange3Single, @Orange3Single, @Orange3Single,
-    @Black3Single, @Green3Single, @LightGray3Single);
-
-var
-  ColorScheme: PColorScheme = @ColorSchemeDark;
-
 { inne zmienne globalne -------------------------------------------------- }
 
 var
@@ -250,6 +260,14 @@ var
 
 { global funcs ---------------------------------------------------------- }
 
+{ This resets some view properties to default, such that all Graphs are visible.
+  This may ba called only after ResizeGL (it requires W/HSize set).
+
+  Note that you shouldn't call this without user explicit request
+  (e.g. you shouldn't call this from each EventResize, or even from each
+  EventInit (because when we switch fullscreen on/off we're
+  doing Close + Init again)). After all, user usually wants to preserve it's
+  view properties. }
 procedure HomeState;
 var MinX, MaxX, MinY, MaxY: Float;
     MiddleX, MiddleY, SizeX, SizeY: Float;
@@ -294,8 +312,8 @@ begin
   ScaleX := KambiUtils.Max(KambiUtils.Min(WSize / SizeX, HSize / SizeY), 0.01);
   ScaleY := ScaleX;
 
-  MiddleX:=(MinX + MaxX) / 2;
-  MiddleY:=(MinY + MaxY) / 2;
+  MiddleX := (MinX + MaxX) / 2;
+  MiddleY := (MinY + MaxY) / 2;
 
   { MoveX/Y to look at MiddleX/Y.
     I want XGLWinToUklad(WSize/2) = MiddleX.
@@ -326,6 +344,53 @@ begin result := pixX*WSize/glw.width end;
 
 function YPixels(pixY: TGLfloat): TGLfloat;
 begin result := pixY*HSize/glw.height end;
+
+var
+  GraphsListMenu: TMenu;
+
+procedure UpdateGraphsMenu;
+var
+  I: Integer;
+  CharKey: char;
+begin
+  while GraphsListMenu.EntriesCount > 3 do
+    GraphsListMenu.EntryDelete(3);
+
+  for I := 0 to Graphs.Count-1 do
+  begin
+    if I < 10 then
+      CharKey := DigitAsChar(i) else
+      CharKey := #0;
+    Graphs[i].MenuItem := TMenuItemChecked.Create(
+      'Graph "' + SQuoteMenuEntryCaption(Graphs[i].Name) + '"',
+      I + 1000, CharKey, Graphs[i].Visible,
+      false {false, because TGraph.SetVisible will handle this anyway});
+    GraphsListMenu.Append(Graphs[i].MenuItem);
+  end;
+end;
+
+{ This creates new TGraph instance and adds it to Graphs list.
+  If loading graph from file fails, it will display nice MessageOK dialog.
+
+  It also takes care of setting AColorNumer parameter for TGraph.Create
+  as it should be. }
+procedure GraphsAdd(const FileName: string);
+var
+  G: TGraph;
+begin
+  try
+    G := TGraph.Create(FileName, Graphs.Count);
+  except
+    on E: Exception do
+    begin
+      MessageOK(Glw, Format('Error when opening graph from file "%s": %s',
+        [FileName, E.Message]), taLeft);
+      Exit;
+    end;
+  end;
+
+  Graphs.Add(G);
+end;
 
 { registered glw callbacks -------------------------------------------------- }
 
@@ -525,6 +590,9 @@ begin
  end;
 end;
 
+var
+  IdleFirst: boolean = true;
+
 procedure Idle(glwin: TGLWindow);
 
   function SpeedFactor: TGLfloat;
@@ -586,7 +654,26 @@ procedure Idle(glwin: TGLWindow);
    glwin.PostRedisplay;
   end;
 
+  { Interpretuje wszystkie pozostale ParStr(1) .. ParStr(ParCount) jako
+    nazwy plikow (lub stdin jesli sa '-').
+    Laduje z nich graphs, dodajac je do Graphs list. }
+  procedure OpenGraphsFromParameters;
+  var
+    I: integer;
+  begin
+    for I := 1 to Parameters.High do
+      GraphsAdd(Parameters[I]);
+  end;
+
 begin
+  if IdleFirst then
+  begin
+    OpenGraphsFromParameters;
+    UpdateGraphsMenu;
+    HomeState;
+    IdleFirst := false;
+  end;
+
  with glwin do begin
   if KeysDown[K_Up] then AddGL(MoveY, -1);
   if KeysDown[K_Down] then AddGL(MoveY, +1);
@@ -650,14 +737,16 @@ end;
 { menu-related things -------------------------------------------------------- }
 
 function GetMainMenu(): TMenu;
-var M: TMenu;
-    i: Integer;
-    bo: TBoolOption;
-    CharKey: char;
+var
+  M: TMenu;
+  bo: TBoolOption;
 begin
  Result := TMenu.Create('Main menu');
  M := TMenu.Create('_File');
-   M.Append(TMenuItem.Create('Show _help', 5, K_F1));
+   M.Append(TMenuItem.Create('_Open graph ...', 101, CtrlO));
+   M.Append(TMenuItem.Create('_Add graph ...', 102, CtrlA));
+   M.Append(TMenuSeparator.Create);
+   M.Append(TMenuItem.Create('_Close all graphs', 103));
    M.Append(TMenuSeparator.Create);
    M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
    Result.Append(M);
@@ -671,23 +760,16 @@ begin
    M.Append(TMenuItem.Create('_Hide all graphs',      30));
    M.Append(TMenuItem.Create('_Show all graphs',      31));
    M.Append(TMenuSeparator.Create);
-   for i := 0 to Graphs.Count-1 do
-   begin
-    if i < 10 then
-     CharKey := DigitAsChar(i) else
-     CharKey := #0;
-    Graphs[i].MenuItem := TMenuItemChecked.Create(
-      'Graph "' + SQuoteMenuEntryCaption(Graphs[i].Name) + '"',
-      i+1000, CharKey, Graphs[i].Visible,
-      false {false, because TGraph.SetVisible will handle this anyway});
-    M.Append(Graphs[i].MenuItem);
-   end;
+   GraphsListMenu := M;
    Result.Append(M);
  M := TMenu.Create('_Other');
    M.Append(TMenuItem.Create('_Restore default view',     21, K_Home));
    M.Append(TMenuItemChecked.Create('_FullScreen on/off', 22, K_F11,
      glw.FullScreen, true));
    M.Append(TMenuItem.Create('_Save screen to PNG',       23, K_F5));
+   Result.Append(M);
+ M := TMenu.Create('_Help');
+   M.Append(TMenuItem.Create('Show _help', 5, K_F1));
    Result.Append(M);
 end;
 
@@ -699,6 +781,41 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
    for i := 0 to Graphs.Count - 1 do
     Graphs[i].Visible := Value;
    glwin.PostRedisplay;
+  end;
+
+  procedure OpenGraph;
+  var
+    FileName: string;
+  begin
+    FileName := '';
+    if Glwin.FileDialog('Open graph from file', FileName, true) then
+    begin
+      Graphs.FreeContents;
+      GraphsAdd(FileName);
+      UpdateGraphsMenu;
+      HomeState;
+    end;
+  end;
+
+  procedure AddGraph;
+  var
+    FileName: string;
+  begin
+    FileName := '';
+    if Glwin.FileDialog('Add graph from file', FileName, true) then
+    begin
+      GraphsAdd(FileName);
+      UpdateGraphsMenu;
+      { Calling HomeState is not desirable here, maybe user wants to keep
+        previous view settings, to see already existing graphs as they were. }
+    end;
+  end;
+
+  procedure CloseAllGraphs;
+  begin
+    Graphs.FreeContents;
+    UpdateGraphsMenu;
+    HomeState;
   end;
 
 var bo: TBoolOption;
@@ -724,6 +841,10 @@ begin
   30: SetVisibleAll(false);
   31: SetVisibleAll(true);
 
+  101: OpenGraph;
+  102: AddGraph;
+  103: CloseAllGraphs;
+
   900..999:
     begin
      bo := TBoolOption(Item.IntData-900);
@@ -740,24 +861,6 @@ begin
 end;
 
 { params parsing ------------------------------------------------------------ }
-
-procedure InitGraphs;
-{ Interpretuje wszystkie pozostale ParStr(1) .. ParStr(ParCount) jako
-  nazwy plikow (lub stdin jesli sa '-'). }
-var i: integer;
-    Color: TVector3f;
-begin
- for i := 1 to Parameters.High do
- begin
-  if i <= IloscGraphKol then
-   Color := ColorScheme^[TColorItem(Ord(ciGraph1)+i-1)]^ else
-  repeat
-   Color := Vector3f(Random, Random, Random);
-   { Don't allow too dark colors, as they are not visible... }
-  until BWColorValue(Color) >= 0.2;
-  Graphs.Add(TGraph.Create(Parameters[i], Color));
- end;
-end;
 
 procedure BoolOptionsOptionProc(OptionNum: Integer; HasArgument: boolean;
   const Argument: string; const SeparateArgs: TSeparateArgs; Data: Pointer);
@@ -863,7 +966,6 @@ begin
   ParseParametersBoolOptions;
   glw.ParseParameters;
   ParseParameters(Options, @OptionProc, nil);
-  InitGraphs;
 
   { basic glw callbacks }
   glw.OnIdle := @Idle;
@@ -883,14 +985,6 @@ begin
   glw.Caption := 'glplotter';
 
   glw.Init;
-
-  { Don't do it in InitGL. It must be after ResizeGL (it requires W/HSize set).
-
-    And it should be called only once for a whole program (so it can't be
-    in EventResize and it can't be in EventInit (even if we would calculate
-    W/HSize in EventInit) because when we switch fullscreen on/off we're
-    doing Close+Init again) }
-  HomeState;
 
   glwm.Loop;
  finally Graphs.FreeWithContents end;
