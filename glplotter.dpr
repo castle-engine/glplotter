@@ -51,10 +51,10 @@ uses
 
 type
   { pomiedzy ciGraph1 a ciGraphMax musza byc kolejne ciGraph* }
-  TColorItem = (ciBG, ciOsieXY, ciCrosshair,
-    ciGrid1,      ciPodzialka1,      ciLiczby1,
-    ciGridPi,     ciPodzialkaPi,     ciLiczbyPi,
-    ciGridCustom, ciPodzialkaCustom, ciLiczbyCustom,
+  TColorItem = (ciBG, ciMainXYLines, ciCrosshair,
+    ciGrid1,      ciNumScale1,      ciNumbers1,
+    ciGridPi,     ciNumScalePi,     ciNumbersPi,
+    ciGridCustom, ciNumScaleCustom, ciNumbersCustom,
     ciGraph1, ciGraph2, ciGraph3);
   TColorScheme = array[TColorItem]of PVector3f;
   PColorScheme = ^TColorScheme;
@@ -247,14 +247,12 @@ var Graphs: TGraphsList;
 
 { BoolOptions -------------------------------------------------------- }
 
-{ TODO: good english names for osie, podzialka, liczby }
-
 type
   TBoolOption=
-  ( boCrosshair, boPointsCoords, boOsieXY, boMap,
-    boGrid1,      boPodzialka1,      boLiczby1,
-    boGridPi,     boPodzialkaPi,     boLiczbyPi,
-    boGridCustom, boPodzialkaCustom, boLiczbyCustom,
+  ( boCrosshair, boPointsCoords, boMainXYLines, boMap,
+    boGrid1,      boNumScale1,      boNumbers1,
+    boGridPi,     boNumScalePi,     boNumbersPi,
+    boGridCustom, boNumScaleCustom, boNumbersCustom,
     boOnlyPoints);
 
 var
@@ -271,21 +269,21 @@ const
   { BoolOptionsKeys decyduja o przelaczaniu opcji klawiszami }
   BoolOptionsKeys: array[TBoolOption]of char =
   ( 'c', 'w', 'o', 'm',
-    'g', 'p', 'l',
-    'G', 'P', 'L',
-    CtrlG, CtrlP, CtrlL,
+    'g', 's', 'n',
+    'G', 'S', 'N',
+    CtrlG, CtrlS, CtrlN,
     'q' );
   BoolOptionsParamsNames: array[TBoolOption]of string =
-  ( 'crosshair', 'point-coords', 'osie-xy', 'map',
-    'grid-1',      'podzialka-1',      'liczby-1',
-    'grid-pi',     'podzialka-pi',     'liczby-pi',
-    'grid-custom', 'podzialka-custom', 'liczby-custom',
+  ( 'crosshair', 'point-coords', 'main-xy-lines', 'map',
+    'grid-1',      'num-scale-1',      'numbers-1',
+    'grid-pi',     'num-scale-pi',     'numbers-pi',
+    'grid-custom', 'num-scale-custom', 'numbers-custom',
     'only-points');
   BoolOptionsMenuNames: array[TBoolOption]of string =
-  ( 'Crosshair', 'Point Coordinates', 'Osie XY', 'Map',
-    'Grid 1',      'Podzialka 1',      'Liczby 1',
-    'Grid Pi',     'Podzialka Pi',     'Liczby Pi',
-    'Grid Custom', 'Podzialka Custom', 'LiczbyCustom',
+  ( 'Crosshair', 'Point Coordinates', 'Main XY lines', 'Map',
+    'Grid 1',      'NumScale 1',      'Numbers 1',
+    'Grid Pi',     'NumScale Pi',     'Numbers Pi',
+    'Grid Custom', 'NumScale Custom', 'Numbers Custom',
     'Only Points');
 
 { inne zmienne globalne -------------------------------------------------- }
@@ -470,12 +468,12 @@ end;
 
 procedure Draw(glwin: TGLWindow);
 
-  procedure ShowGridPodzialka(
+  procedure ShowGridNumScale(
     const krok: extended; const LiczbowyString: string;
-    showGrid, showPodzialka, showPodzialkaLiczby: boolean;
-    const gridKol, podzialkaKol, podzialkaLiczbyKol: TVector3f);
-  { ShowGridPodzialka rysuje siatke, podzialke i podzialke liczbowa
-    co krok. Odpowiednie parametry showXxx okreslaja co dokladnie narysowac -
+    showGrid, showNumScale, showNumbers: boolean;
+    const gridKol, NumScaleKol, NumbersKol: TVector3f);
+  { ShowGridNumScale draws grid, numbers scale and numbers.
+    Odpowiednie parametry showXxx okreslaja co dokladnie narysowac -
     dowolna kombinacja trzech powyzszych elementow moze byc wiec narysowana.
     Parametry xxxKol okreslaja kolory odpowiednich elementow.
     Parametr LiczbowyString ma zastosowanie tylko do rysowania podzialki liczbowej.
@@ -483,9 +481,9 @@ procedure Draw(glwin: TGLWindow);
      gdzie i to wielokrotnosc kroku o jaka dana kreska jest wysunieta.
      Przykladowe wartosci LiczbowyTekst to '%d', '%d*Pi', '%1: f'. }
   var i, minx, maxx, miny, maxy: integer;
-  const podzialkaLength =10;
+  const NumScaleLength =10;
   begin
-   if not (showGrid or showPodzialka or showPodzialkaLiczby) then exit;
+   if not (showGrid or showNumScale or showNumbers) then exit;
 
    { minx to najmniejsza wartosc taka ze minx*krok miesci sie na ekranie.
      Podobnie maxx, miny, maxy. }
@@ -512,29 +510,29 @@ procedure Draw(glwin: TGLWindow);
     glEnd;
    end;
 
-   if ShowPodzialka then
+   if ShowNumScale then
    begin
-    glColorv(podzialkaKol);
+    glColorv(NumScaleKol);
     glBegin(GL_LINES);
     { przesuwajac sie o wartosc integer unikamy przy okazji kumulacji bledow
       zaokraglen zmiennoprzecinkowych gdybysmy przesuwali sie o krok
       zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
     for i := minx to maxx do
     begin
-     glVertex2f(i*krok, -YPixels(podzialkaLength)/ScaleY);
-     glVertex2f(i*krok,+ YPixels(podzialkaLength)/ScaleY);
+     glVertex2f(i*krok, -YPixels(NumScaleLength)/ScaleY);
+     glVertex2f(i*krok,+ YPixels(NumScaleLength)/ScaleY);
     end;
     for i := miny to maxy do
     begin
-     glVertex2f(-XPixels(podzialkaLength)/ScaleX, i*krok);
-     glVertex2f(+XPixels(podzialkaLength)/ScaleX, i*krok);
+     glVertex2f(-XPixels(NumScaleLength)/ScaleX, i*krok);
+     glVertex2f(+XPixels(NumScaleLength)/ScaleX, i*krok);
     end;
     glEnd;
    end;
 
-   if ShowPodzialkaLiczby then
+   if ShowNumbers then
    begin
-    glColorv(podzialkaLiczbyKol);
+    glColorv(NumbersKol);
     for i := minx to maxx do
     begin
      glRasterPos2f(i*krok, 0); Font.PrintFmt(LiczbowyString, [i, i*krok]);
@@ -601,19 +599,19 @@ begin
  glTranslatef(MoveX, MoveY, 0);
  glScalef(ScaleX, ScaleY, 0);
 
- ShowGridPodzialka(1, '%d',
-   BoolOptions[boGrid1],   BoolOptions[boPodzialka1],   BoolOptions[boLiczby1],
-   ColorScheme^[ciGrid1]^,  ColorScheme^[ciPodzialka1]^,  ColorScheme^[ciLiczby1]^);
- ShowGridPodzialka(Pi, '%d*Pi',
-   BoolOptions[boGridPi],  BoolOptions[boPodzialkaPi],  BoolOptions[boLiczbyPi],
-   ColorScheme^[ciGridPi]^, ColorScheme^[ciPodzialkaPi]^, ColorScheme^[ciLiczbyPi]^);
- ShowGridPodzialka(CustomSize, '%1:f',
-   BoolOptions[boGridCustom],  BoolOptions[boPodzialkaCustom],  BoolOptions[boLiczbyCustom],
-   ColorScheme^[ciGridCustom]^, ColorScheme^[ciPodzialkaCustom]^, ColorScheme^[ciLiczbyCustom]^);
+ ShowGridNumScale(1, '%d',
+   BoolOptions[boGrid1],   BoolOptions[boNumScale1],   BoolOptions[boNumbers1],
+   ColorScheme^[ciGrid1]^,  ColorScheme^[ciNumScale1]^,  ColorScheme^[ciNumbers1]^);
+ ShowGridNumScale(Pi, '%d*Pi',
+   BoolOptions[boGridPi],  BoolOptions[boNumScalePi],  BoolOptions[boNumbersPi],
+   ColorScheme^[ciGridPi]^, ColorScheme^[ciNumScalePi]^, ColorScheme^[ciNumbersPi]^);
+ ShowGridNumScale(CustomSize, '%1:f',
+   BoolOptions[boGridCustom],  BoolOptions[boNumScaleCustom],  BoolOptions[boNumbersCustom],
+   ColorScheme^[ciGridCustom]^, ColorScheme^[ciNumScaleCustom]^, ColorScheme^[ciNumbersCustom]^);
 
- if BoolOptions[boOsieXY] then
+ if BoolOptions[boMainXYLines] then
  begin
-  glColorv(ColorScheme^[ciOsieXY]^);
+  glColorv(ColorScheme^[ciMainXYLines]^);
   glBegin(GL_LINES);
    glVertex2f(0, YGLWinToUklad(0)); glVertex2f(0, YGLWinToUklad(HSize));
    glVertex2f(XGLWinToUklad(0), 0); glVertex2f(XGLWinToUklad(WSize), 0);
