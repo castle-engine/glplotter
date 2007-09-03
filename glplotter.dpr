@@ -851,7 +851,7 @@ begin
    M.Append(TMenuItem.Create('_Restore Default View',     21, K_Home));
    M.Append(TMenuItemChecked.Create('_Full Screen', 22, K_F11,
      glw.FullScreen, true));
-   M.Append(TMenuItem.Create('_Save Screen',       23, K_F5));
+   M.Append(TMenuItem.Create('_Save Screen ...',       23, K_F5));
    Result.Append(M);
  M := TMenu.Create('_Help');
    M.Append(TMenuItem.Create('Help About Controls (Keys and Mouse)', 5, K_F1));
@@ -859,6 +859,11 @@ begin
    M.Append(TMenuItem.Create('About glplotter'                     , 6));
    Result.Append(M);
 end;
+
+var
+  LastInputX1: string = '0';
+  LastInputX2: string = '1';
+  LastInputXStep: string = '0.1';
 
 procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
 
@@ -905,9 +910,11 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
       'e.g. try "10 * Pi")';
   begin
     Expression := '';
-    X1 := '0';
-    X2 := '1';
-    XStep := '0.1';
+
+    X1 := LastInputX1;
+    X2 := LastInputX2;
+    XStep := LastInputXStep;
+
     Result :=
       MessageInputQuery(Glwin,
         'Function expression :' + nl + nl +
@@ -916,6 +923,10 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
       MessageInputQuery(Glwin, 'First X value :' + SYouCan, X1, taLeft) and
       MessageInputQuery(Glwin, 'Last X value :'  + SYouCan, X2, taLeft) and
       MessageInputQuery(Glwin, 'X value step :'  + SYouCan, XStep, taLeft);
+
+    LastInputX1 := X1;
+    LastInputX2 := X2;
+    LastInputXStep := XStep;
   end;
 
   procedure OpenGraphFromExpression;
