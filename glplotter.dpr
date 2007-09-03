@@ -47,6 +47,9 @@ uses
 {$define read_interface}
 {$define read_implementation}
 
+const
+  Version = '1.1.6';
+
 { colors -------------------------------------------------------------------- }
 
 type
@@ -268,11 +271,11 @@ var
 const
   { BoolOptionsKeys decyduja o przelaczaniu opcji klawiszami }
   BoolOptionsKeys: array[TBoolOption]of char =
-  ( 'c', 'w', 'o', 'm',
+  ( 'c', 'p', 'l', 'm',
     'g', 's', 'n',
     'G', 'S', 'N',
     CtrlG, CtrlS, CtrlN,
-    'q' );
+    'o' );
   BoolOptionsParamsNames: array[TBoolOption]of string =
   ( 'crosshair', 'point-coords', 'main-xy-lines', 'map',
     'grid-1',      'num-scale-1',      'numbers-1',
@@ -815,26 +818,26 @@ var
 begin
  Result := TMenu.Create('Main menu');
  M := TMenu.Create('_File');
-   M.Append(TMenuItem.Create('_Open graph from file ...', 101, CtrlO));
-   M.Append(TMenuItem.Create('_Add graph from file ...', 102, CtrlA));
+   M.Append(TMenuItem.Create('_Open Graph from File ...', 101, CtrlO));
+   M.Append(TMenuItem.Create('_Add Graph from File ...', 102, CtrlA));
    M.Append(TMenuSeparator.Create);
    M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
    Result.Append(M);
  M := TMenu.Create('_Functions');
-   M.Append(TMenuItem.Create('_Open graph with function ...', 201));
-   M.Append(TMenuItem.Create('_Add graph with function ...', 202));
+   M.Append(TMenuItem.Create('_Open Graph with Function ...', 201));
+   M.Append(TMenuItem.Create('_Add Graph with Function ...', 202));
    M.Append(TMenuSeparator.Create);
-   M2 := TMenu.Create('Add graph with _sample function');
+   M2 := TMenu.Create('Add Graph with _Sample Function');
      M2.Append(TMenuItem.Create('_sin(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 203));
      M2.Append(TMenuItem.Create('_cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 204));
      M2.Append(TMenuItem.Create('[sin(x) > cos(x)] (on [-10 * Pi, 10 * Pi], with 0.1 step)', 205));
    M.Append(M2);
    Result.Append(M);
  M := TMenu.Create('_Graphs');
-   M.Append(TMenuItem.Create('_Hide all graphs',      30));
-   M.Append(TMenuItem.Create('_Show all graphs',      31));
+   M.Append(TMenuItem.Create('_Hide All Graphs',      30));
+   M.Append(TMenuItem.Create('_Show All Graphs',      31));
    M.Append(TMenuSeparator.Create);
-   M.Append(TMenuItem.Create('_Close all graphs', 103));
+   M.Append(TMenuItem.Create('_Close All Graphs', 103));
    M.Append(TMenuSeparator.Create);
    GraphsListMenu := M;
    Result.Append(M);
@@ -845,13 +848,15 @@ begin
       BoolOptions[bo], true));
    Result.Append(M);
  M := TMenu.Create('_Other');
-   M.Append(TMenuItem.Create('_Restore default view',     21, K_Home));
-   M.Append(TMenuItemChecked.Create('_FullScreen on/off', 22, K_F11,
+   M.Append(TMenuItem.Create('_Restore Default View',     21, K_Home));
+   M.Append(TMenuItemChecked.Create('_Full Screen', 22, K_F11,
      glw.FullScreen, true));
-   M.Append(TMenuItem.Create('_Save screen to PNG',       23, K_F5));
+   M.Append(TMenuItem.Create('_Save Screen',       23, K_F5));
    Result.Append(M);
  M := TMenu.Create('_Help');
-   M.Append(TMenuItem.Create('Show _help', 5, K_F1));
+   M.Append(TMenuItem.Create('Help About Controls (Keys and Mouse)', 5, K_F1));
+   M.Append(TMenuSeparator.Create);
+   M.Append(TMenuItem.Create('About glplotter'                     , 6));
    Result.Append(M);
 end;
 
@@ -971,6 +976,14 @@ begin
          '',
          'You can also move view by dragging while holding left mouse button.'],
          taLeft);
+  6:  MessageOK(glwin,
+        [ 'glplotter: plotting graphs, of functions and others.',
+          'Version ' + Version,
+          'By Michalis Kamburelis.',
+          '',
+          '[http://vrmlengine.sourceforge.net/glplotter_and_gen_function.php]',
+          '',
+          'Compiled with ' + SCompilerDescription +'.' ], taLeft);
   10: glwin.Close;
 
   21: HomeState;
@@ -1039,7 +1052,6 @@ begin
 end;
 
 const
-  Version = '1.1.6';
   DisplayProgramName = 'glplotter';
   Options: array[0..4] of TOption = (
     (Short: 'h'; Long: 'help'; Argument: oaNone),
@@ -1128,6 +1140,8 @@ begin
   glw.FpsActive := true;
   glw.SetDemoOptions(K_None, #0, false);
   glw.Caption := 'glplotter';
+
+  GLWinMessagesTheme := GLWinMessagesTheme_TypicalGUI;
 
   glw.Init;
 
