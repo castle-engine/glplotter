@@ -42,7 +42,8 @@ uses
   SysUtils, OpenGLh, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
   KambiClassUtils, GLWinMessages, GLW_Demo, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
-  KambiStringUtils, KambiFilesUtils, MathExpr, MathExprParser;
+  KambiStringUtils, KambiFilesUtils, MathExpr, MathExprParser,
+  GLWindowRecentMenu, GLPlotterConfig;
 
 {$define read_interface}
 {$define read_implementation}
@@ -811,16 +812,54 @@ end;
 
 { menu-related things -------------------------------------------------------- }
 
+var
+  OpenDialogPath: string = '';
+  RecentMenu: TGLRecentMenu;
+
+{ This opens/adds graph from file. }
+procedure OpenOrAddGraphFromFileCore(Open: boolean; const FileName: string);
+begin
+  if Open then
+  begin
+    Graphs.FreeContents;
+    GraphsAddFromFile(FileName);
+    UpdateGraphsMenu;
+    HomeState;
+  end else
+  begin
+    GraphsAddFromFile(FileName);
+    UpdateGraphsMenu;
+    { Calling HomeState is not desirable here, maybe user wants to keep
+      previous view settings, to see already existing graphs as they were. }
+  end;
+
+  RecentMenu.Add(FileName);
+  OpenDialogPath := ExtractFilePath(FileName);
+end;
+
+type
+  THelper = class
+    class procedure OpenRecent(const FileName: string);
+  end;
+
+class procedure THelper.OpenRecent(const FileName: string);
+begin
+  OpenOrAddGraphFromFileCore(false, FileName);
+end;
+
 function GetMainMenu(): TMenu;
 var
   M, M2: TMenu;
   bo: TBoolOption;
+  NextRecentMenuItem: TMenuEntry;
 begin
  Result := TMenu.Create('Main menu');
  M := TMenu.Create('_File');
    M.Append(TMenuItem.Create('_Open Graph from File ...', 101, CtrlO));
    M.Append(TMenuItem.Create('_Add Graph from File ...', 102, CtrlA));
-   M.Append(TMenuSeparator.Create);
+   NextRecentMenuItem := TMenuSeparator.Create;
+   M.Append(NextRecentMenuItem);
+   RecentMenu.NextMenuItem := NextRecentMenuItem;
    M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
    Result.Append(M);
  M := TMenu.Create('_Functions');
@@ -875,32 +914,16 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
    glwin.PostRedisplay;
   end;
 
-  procedure OpenGraphFromFile;
+  procedure OpenOrAddGraphFromFile(Open: boolean);
   var
-    FileName: string;
+    FileName, S: string;
   begin
-    FileName := '';
-    if Glwin.FileDialog('Open graph from file', FileName, true) then
-    begin
-      Graphs.FreeContents;
-      GraphsAddFromFile(FileName);
-      UpdateGraphsMenu;
-      HomeState;
-    end;
-  end;
-
-  procedure AddGraphFromFile;
-  var
-    FileName: string;
-  begin
-    FileName := '';
-    if Glwin.FileDialog('Add graph from file', FileName, true) then
-    begin
-      GraphsAddFromFile(FileName);
-      UpdateGraphsMenu;
-      { Calling HomeState is not desirable here, maybe user wants to keep
-        previous view settings, to see already existing graphs as they were. }
-    end;
+    FileName := OpenDialogPath;
+    if Open then
+      S := 'Open graph from file' else
+      S := 'Add graph from file';
+    if Glwin.FileDialog(S, FileName, true) then
+      OpenOrAddGraphFromFileCore(Open, FileName);
   end;
 
   function GetExpression(out Expression: string;
@@ -1004,8 +1027,8 @@ begin
   30: SetVisibleAll(false);
   31: SetVisibleAll(true);
 
-  101: OpenGraphFromFile;
-  102: AddGraphFromFile;
+  101: OpenOrAddGraphFromFile(true);
+  102: OpenOrAddGraphFromFile(false);
   103: CloseAllGraphs;
 
   201: OpenGraphFromExpression;
@@ -1127,37 +1150,53 @@ end;
 
 { main ------------------------------------------------------------ }
 
+var
+  Helper: THelper;
 begin
- Graphs := TGraphsList.Create;
- try
-  { parse parameters }
-  ParseParametersBoolOptions;
-  glw.ParseParameters;
-  ParseParameters(Options, @OptionProc, nil);
+  { initialize RecentMenu (Helper is just because I can't do @THelper.OpenRecent
+    under FPC) }
+  Helper := nil;
+  RecentMenu := TGLRecentMenu.Create;
+  try
+    RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
+    RecentMenu.OnOpenRecent := @Helper.OpenRecent;
 
-  { basic glw callbacks }
-  glw.OnIdle := @Idle;
-  glw.OnResize := @Resize;
-  glw.OnInit := @InitGL;
-  glw.OnClose := @CloseGL;
-  glw.OnMouseMove := @MouseMove;
-  glw.OnDraw := @Draw;
+    Graphs := TGraphsList.Create;
+    try
+      { parse parameters }
+      ParseParametersBoolOptions;
+      glw.ParseParameters;
+      ParseParameters(Options, @OptionProc, nil);
 
-  { setup menu }
-  glw.MainMenu := GetMainMenu;
-  glw.OnMenuCommand := @MenuCommand;
+      { basic glw callbacks }
+      glw.OnIdle := @Idle;
+      glw.OnResize := @Resize;
+      glw.OnInit := @InitGL;
+      glw.OnClose := @CloseGL;
+      glw.OnMouseMove := @MouseMove;
+      glw.OnDraw := @Draw;
 
-  { other glw options }
-  glw.FpsActive := true;
-  glw.SetDemoOptions(K_None, #0, false);
-  glw.Caption := 'glplotter';
+      { setup menu }
+      glw.MainMenu := GetMainMenu;
+      glw.OnMenuCommand := @MenuCommand;
 
-  GLWinMessagesTheme := GLWinMessagesTheme_TypicalGUI;
+      { other glw options }
+      glw.FpsActive := true;
+      glw.SetDemoOptions(K_None, #0, false);
+      glw.Caption := 'glplotter';
 
-  glw.Init;
+      GLWinMessagesTheme := GLWinMessagesTheme_TypicalGUI;
 
-  glwm.Loop;
- finally Graphs.FreeWithContents end;
+      glw.Init;
+
+      glwm.Loop;
+    finally Graphs.FreeWithContents end;
+  finally
+    { finalize RecentMenu }
+    if RecentMenu <> nil then
+      RecentMenu.SaveToConfig(ConfigFile, 'recent_files');
+    FreeAndNil(RecentMenu);
+  end;
 end.
 
 {
