@@ -43,7 +43,7 @@ uses
   KambiClassUtils, GLWinMessages, GLW_Demo, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
   KambiStringUtils, KambiFilesUtils, MathExpr, MathExprParser,
-  GLWindowRecentMenu, GLPlotterConfig;
+  GLWindowRecentMenu, GLPlotterConfig, GLImages;
 
 {$define read_interface}
 {$define read_implementation}
