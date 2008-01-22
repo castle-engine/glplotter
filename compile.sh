@@ -25,4 +25,4 @@ rm -f opengl/glwindow.o \
       opengl/GLWindow.o \
       opengl/GLWindow.ppu
 
-fpc -dRELEASE @kambi.cfg ../glplotter/glplotter.dpr
+fpc -dRELEASE @kambi.cfg ../glplotter/glplotter.pasprogram
