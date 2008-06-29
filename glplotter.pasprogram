@@ -757,8 +757,10 @@ begin
   if KeysDown[K_Right] then AddGL(MoveX, -1);
   if KeysDown[K_Left] then AddGL(MoveX, +1);
 
-  if KeysDown[K_Numpad_Minus] then MultiplyGLScale(1 / 1.1);
-  if KeysDown[K_Numpad_Plus]  then MultiplyGLScale(1.1);
+  if KeysDown[K_Numpad_Minus] or KeysDown[K_Minus] or CharactersDown['-'] then
+    MultiplyGLScale(1 / 1.1);
+  if KeysDown[K_Numpad_Plus ] or KeysDown[K_Plus ] or CharactersDown['+'] then
+    MultiplyGLScale(1.1);
 
   if KeysDown[K_X] then
   begin
