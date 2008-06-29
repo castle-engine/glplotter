@@ -673,7 +673,7 @@ procedure Idle(glwin: TGLWindow);
 
   function SpeedFactor: TGLfloat;
   begin
-   Result := glwin.FpsCompSpeed; { to make everything time-based }
+   Result := glwin.IdleSpeed * 50; { to make everything time-based }
    if glwin.KeysDown[K_Ctrl] then Result *= 10;
   end;
 
