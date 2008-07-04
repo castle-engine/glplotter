@@ -138,7 +138,7 @@ begin
   repeat
     Color := Vector3f(Random, Random, Random);
     { Don't allow too dark colors, as they are not visible... }
-  until BWColorValue(Color) >= 0.2;
+  until GrayscaleValue(Color) >= 0.2;
 
   { initialize Points }
   Points := TDynXYArray.Create;
