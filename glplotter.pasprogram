@@ -42,7 +42,7 @@ uses
   SysUtils, GL, GLU, GLExt, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
   KambiClassUtils, GLWinMessages, GLW_Demo, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
-  KambiStringUtils, KambiFilesUtils, MathExpr, MathExprParser,
+  KambiStringUtils, KambiFilesUtils, MathExpr, KambiScriptParser,
   GLWindowRecentMenu, GLPlotterConfig, GLImages;
 
 {$define read_interface}
@@ -156,13 +156,13 @@ begin
   inherited Create;
   CreateCommon(AColorNumber);
 
-  X1 := EvalConstMathExpr(X1Str);
-  X2 := EvalConstMathExpr(X2Str);
-  XStep := EvalConstMathExpr(XStepStr);
+  X1 := ParseConstantFloatExpression(X1Str);
+  X2 := ParseConstantFloatExpression(X2Str);
+  XStep := ParseConstantFloatExpression(XStepStr);
 
   Name := Expression;
 
-  Expr := ParseMathExpr(Expression);
+  Expr := ParseFloatExpression(Expression);
   try
     Points.Count := Floor((X2 - X1) / XStep);
     for I := 0 to Points.Count - 1 do
