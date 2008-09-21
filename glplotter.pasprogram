@@ -1,5 +1,5 @@
 {
-  Copyright 2001-2007 Michalis Kamburelis.
+  Copyright 2001-2008 Michalis Kamburelis.
 
   This file is part of "glplotter".
 
@@ -42,7 +42,7 @@ uses
   SysUtils, GL, GLU, GLExt, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
   KambiClassUtils, GLWinMessages, GLW_Demo, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
-  KambiStringUtils, KambiFilesUtils, MathExpr, KambiScriptParser,
+  KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
   GLWindowRecentMenu, GLPlotterConfig, GLImages;
 
 {$define read_interface}
@@ -150,8 +150,9 @@ constructor TGraph.CreateFromExpression(const Expression: string;
   const X1Str, X2Str, XStepStr: string; AColorNumber: Integer);
 var
   I: Integer;
-  Expr: TMathExpr;
+  Expr: TKamScriptExpression;
   X1, X2, XStep: Extended;
+  X, Y: TKamScriptFloat;
 begin
   inherited Create;
   CreateCommon(AColorNumber);
@@ -162,19 +163,26 @@ begin
 
   Name := Expression;
 
-  Expr := ParseFloatExpression(Expression);
+  X := TKamScriptFloat.Create;
   try
-    Points.Count := Floor((X2 - X1) / XStep);
-    for I := 0 to Points.Count - 1 do
-    begin
-      { calculate each time X as X1 + I * XStep, this is numerically stable
-        (contrary to X += XStep each time. that cummulates errors)  }
-      SingleVariable := X1 + I * XStep;
-      Points.Items[I].X := SingleVariable;
-      Points.Items[I].Break := not Expr.TryValue(
-        @ReturnSingleVariable, Points.Items[I].Y);
-    end;
-  finally FreeAndNil(Expr) end;
+    X.Name := 'x';
+    Expr := ParseFloatExpression(Expression, [X]);
+    try
+      Points.Count := Floor((X2 - X1) / XStep);
+      for I := 0 to Points.Count - 1 do
+      begin
+        { calculate each time X as X1 + I * XStep, this is numerically stable
+          (contrary to X += XStep each time. that cummulates errors)  }
+        X.Value := X1 + I * XStep;
+        Y := Expr.TryExecute as TKamScriptFloat;
+
+        Points.Items[I].X := X.Value;
+        Points.Items[I].Break := Y = nil;
+        if Y <> nil then
+          Points.Items[I].Y := Y.Value;
+      end;
+    finally FreeAndNil(Expr) end;
+  finally FreeAndNil(X) end;
 end;
 
 constructor TGraph.CreateFromFile(const FileName: string; AColorNumber: Integer);
@@ -456,7 +464,7 @@ begin
   try
     G := TGraph.CreateFromExpression(Expression, X1, X2, XStep, Graphs.Count);
   except
-    on E: EMathSyntaxError do
+    on E: EKamScriptSyntaxError do
     begin
       MessageOK(Glw, Format(
         'Error when parsing function expression at position %d: %s',
