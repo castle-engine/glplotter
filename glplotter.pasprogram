@@ -879,7 +879,7 @@ begin
    M2 := TMenu.Create('Add Graph with _Sample Function');
      M2.Append(TMenuItem.Create('_sin(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 203));
      M2.Append(TMenuItem.Create('_cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 204));
-     M2.Append(TMenuItem.Create('[sin(x) > cos(x)] (on [-10 * Pi, 10 * Pi], with 0.1 step)', 205));
+     M2.Append(TMenuItem.Create('sin(x) > cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 205));
    M.Append(M2);
    Result.Append(M);
  M := TMenu.Create('_Graphs');
@@ -1043,9 +1043,9 @@ begin
 
   201: OpenGraphFromExpression;
   202: AddGraphFromExpression;
-  203: AddSampleGraphFromExpression('sin(x)'           , '-10 * Pi', '10 * Pi', '0.1');
-  204: AddSampleGraphFromExpression('cos(x)'           , '-10 * Pi', '10 * Pi', '0.1');
-  205: AddSampleGraphFromExpression('[sin(x) > cos(x)]', '-10 * Pi', '10 * Pi', '0.1');
+  203: AddSampleGraphFromExpression('sin(x)'         , '-10 * Pi', '10 * Pi', '0.1');
+  204: AddSampleGraphFromExpression('cos(x)'         , '-10 * Pi', '10 * Pi', '0.1');
+  205: AddSampleGraphFromExpression('sin(x) > cos(x)', '-10 * Pi', '10 * Pi', '0.1');
 
   900..999:
     begin
