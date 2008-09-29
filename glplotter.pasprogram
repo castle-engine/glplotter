@@ -872,7 +872,7 @@ begin
    RecentMenu.NextMenuItem := NextRecentMenuItem;
    M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
    Result.Append(M);
- M := TMenu.Create('_Functions');
+ M := TMenu.Create('F_unctions');
    M.Append(TMenuItem.Create('_Open Graph with Function ...', 201));
    M.Append(TMenuItem.Create('_Add Graph with Function ...', 202));
    M.Append(TMenuSeparator.Create);
