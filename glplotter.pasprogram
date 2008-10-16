@@ -31,9 +31,8 @@ program glplotter;
   zaladowac wykres z stdin musisz wiec zawsze uruchomic program
   tak zeby jego stdin bylo utworzone - na przyklad, umiescic
   glplotter na koncu potoku :
-      genfunkcja 0 100 0.1 "x+1" | glplotter -
+      gen_function 0 100 0.1 "x+1" | glplotter -
   zadziala zgodnie z oczekiwaniami.
-  To jest zreszta skrypt glplotter_funkcja.
 }
 
 {$apptype GUI}
