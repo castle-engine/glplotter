@@ -173,7 +173,7 @@ begin
         { calculate each time X as X1 + I * XStep, this is numerically stable
           (contrary to X += XStep each time. that cummulates errors)  }
         X.Value := X1 + I * XStep;
-        Y := Expr.TryExecute as TKamScriptFloat;
+        Y := Expr.TryExecuteMath as TKamScriptFloat;
 
         Points.Items[I].X := X.Value;
         Points.Items[I].Break := Y = nil;
@@ -468,6 +468,13 @@ begin
       MessageOK(Glw, Format(
         'Error when parsing function expression at position %d: %s',
         [E.LexerTextPos, E.Message]), taLeft);
+      Exit;
+    end;
+    on E: EKamScriptError do
+    begin
+      MessageOK(Glw, Format(
+        'Error %s in function expression: %s',
+        [E.ClassName, E.Message]), taLeft);
       Exit;
     end;
   end;
@@ -950,7 +957,7 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
     Result :=
       MessageInputQuery(Glwin,
         'Function expression :' + nl + nl +
-        '(x is the function argument, e.g. "x * 2")',
+        '(where x is the function argument, e.g. "x * 2")',
         Expression, taLeft) and
       MessageInputQuery(Glwin, 'First X value :' + SYouCan, X1, taLeft) and
       MessageInputQuery(Glwin, 'Last X value :'  + SYouCan, X2, taLeft) and
