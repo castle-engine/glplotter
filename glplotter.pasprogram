@@ -687,7 +687,7 @@ procedure Idle(glwin: TGLWindow);
 
   function SpeedFactor: TGLfloat;
   begin
-   Result := glwin.IdleSpeed * 50; { to make everything time-based }
+   Result := glwin.Fps.IdleSpeed * 50; { to make everything time-based }
    if glwin.KeysDown[K_Ctrl] then Result *= 10;
   end;
 
@@ -1197,7 +1197,7 @@ begin
       glw.OnMenuCommand := @MenuCommand;
 
       { other glw options }
-      glw.FpsActive := true;
+      glw.Fps.Active := true;
       glw.SetDemoOptions(K_None, #0, false);
       glw.Caption := 'glplotter';
 
