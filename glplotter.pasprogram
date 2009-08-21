@@ -1166,16 +1166,12 @@ end;
 
 { main ------------------------------------------------------------ }
 
-var
-  Helper: THelper;
 begin
-  { initialize RecentMenu (Helper is just because I can't do @THelper.OpenRecent
-    under FPC) }
-  Helper := nil;
+  { initialize RecentMenu }
   RecentMenu := TGLRecentMenu.Create;
   try
     RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
-    RecentMenu.OnOpenRecent := @Helper.OpenRecent;
+    RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
 
     Graphs := TGraphsList.Create;
     try
