@@ -215,7 +215,7 @@ constructor TGraph.CreateFromFile(const FileName: string; AColorNumber: Integer)
      if not (xy.Break and ((Points.Count = 0) or Points.Items[Points.High].Break) ) then
      begin
       if not xy.Break then DeFormat(line, '%f %f', [@xy.x, @xy.y]);
-      Points.AppendItem(xy);
+      Points.Add(xy);
      end;
     end;
    end;
@@ -1092,9 +1092,9 @@ begin
   for bo := Low(bo) to High(bo) do
   begin
    Option.Long := BoolOptionsParamsNames[bo];
-   Options.AppendItem(Option);
+   Options.Add(Option);
    Option.Long := 'no-' +BoolOptionsParamsNames[bo];
-   Options.AppendItem(Option);
+   Options.Add(Option);
   end;
 
   ParseParameters(Options, @BoolOptionsOptionProc, nil, true);
