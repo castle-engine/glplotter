@@ -1201,7 +1201,7 @@ begin
 
       glw.Init;
 
-      glwm.Loop;
+      Application.Run;
     finally Graphs.FreeWithContents end;
   finally
     { finalize RecentMenu }
