@@ -39,7 +39,7 @@ program glplotter;
 
 uses
   SysUtils, GL, GLU, GLExt, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
-  KambiClassUtils, GLWinMessages, GLW_Demo, OpenGLBmpFonts,
+  KambiClassUtils, GLWinMessages, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
   KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
   GLWindowRecentMenu, GLPlotterConfig, GLImages;
@@ -300,6 +300,8 @@ const
 { inne zmienne globalne -------------------------------------------------- }
 
 var
+  Glw: TGLWindowDemo;
+
   WSize, HSize: TGLfloat; { rozmiary jakie ma okno we wspolrzednych OpenGL'a }
 
   CustomSize: TGLfloat = 2.5;
@@ -1167,6 +1169,8 @@ end;
 { main ------------------------------------------------------------ }
 
 begin
+  Glw := TGLWindowDemo.Create(Application);
+
   { initialize RecentMenu }
   RecentMenu := TGLRecentMenu.Create;
   try
