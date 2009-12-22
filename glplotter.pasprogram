@@ -690,7 +690,7 @@ procedure Idle(glwin: TGLWindow);
   function SpeedFactor: TGLfloat;
   begin
    Result := glwin.Fps.IdleSpeed * 50; { to make everything time-based }
-   if glwin.KeysDown[K_Ctrl] then Result *= 10;
+   if glwin.Pressed[K_Ctrl] then Result *= 10;
   end;
 
   procedure MultiplyGLScale(Multiplier: TGLfloat);
@@ -767,33 +767,33 @@ begin
   end;
 
  with glwin do begin
-  if KeysDown[K_Up] then AddGL(MoveY, -1);
-  if KeysDown[K_Down] then AddGL(MoveY, +1);
+  if Pressed[K_Up] then AddGL(MoveY, -1);
+  if Pressed[K_Down] then AddGL(MoveY, +1);
 
-  if KeysDown[K_Right] then AddGL(MoveX, -1);
-  if KeysDown[K_Left] then AddGL(MoveX, +1);
+  if Pressed[K_Right] then AddGL(MoveX, -1);
+  if Pressed[K_Left] then AddGL(MoveX, +1);
 
-  if KeysDown[K_Numpad_Minus] or KeysDown[K_Minus] or CharactersDown['-'] then
+  if Pressed[K_Numpad_Minus] or Pressed[K_Minus] or Pressed.Characters['-'] then
     MultiplyGLScale(1 / 1.1);
-  if KeysDown[K_Numpad_Plus ] or KeysDown[K_Plus ] or CharactersDown['+'] then
+  if Pressed[K_Numpad_Plus ] or Pressed[K_Plus ] or Pressed.Characters['+'] then
     MultiplyGLScale(1.1);
 
-  if KeysDown[K_X] then
+  if Pressed[K_X] then
   begin
-    if KeysDown[K_Shift] then
+    if Pressed[K_Shift] then
       MultiplyGLScaleX(1 / 1.1) else
       MultiplyGLScaleX(1.1);
   end;
 
-  if KeysDown[K_Y] then
+  if Pressed[K_Y] then
   begin
-    if KeysDown[K_Shift] then
+    if Pressed[K_Shift] then
       MultiplyGLScaleY(1 / 1.1) else
       MultiplyGLScaleY(1.1);
   end;
 
-  if KeysDown[K_PageUp] then AddGL(rotate, -1);
-  if KeysDown[K_PageDown] then AddGL(rotate, +1);
+  if Pressed[K_PageUp] then AddGL(rotate, -1);
+  if Pressed[K_PageDown] then AddGL(rotate, +1);
  end;
 end;
 
