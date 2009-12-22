@@ -42,7 +42,7 @@ uses
   KambiClassUtils, GLWinMessages, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
   KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
-  GLWindowRecentMenu, GLPlotterConfig, GLImages;
+  GLWindowRecentFiles, GLPlotterConfig, GLImages;
 
 {$define read_interface}
 {$define read_implementation}
@@ -832,7 +832,7 @@ end;
 
 var
   OpenDialogPath: string = '';
-  RecentMenu: TGLRecentMenu;
+  RecentMenu: TGLRecentFiles;
 
 { This opens/adds graph from file. }
 procedure OpenOrAddGraphFromFileCore(Open: boolean; const FileName: string);
@@ -1172,7 +1172,7 @@ begin
   Glw := TGLWindowDemo.Create(Application);
 
   { initialize RecentMenu }
-  RecentMenu := TGLRecentMenu.Create;
+  RecentMenu := TGLRecentFiles.Create(nil);
   try
     RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
