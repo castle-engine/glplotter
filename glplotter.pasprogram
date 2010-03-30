@@ -22,6 +22,18 @@
 
 program glplotter;
 
+{ There's some optimizer bug on Linux/x86_64 with FPC 2.4.0.
+  Happens only when compiled with -dRELEASE option, only when we have
+  GLWindowRecentFiles that uses RecentFiles that uses KambiXMLCfg that uses
+  XMLCfg and DOM units... Something weird then happens, and our Draw procedure
+  never gets called, so glplotter window is never redrawn.
+
+  Doesn't happen with trunk 2.5.1 (on 2010-03-30), so assuming it's already fixed.
+  Doesn't happen with older 2.2.4 too. }
+{$ifdef cpux86_64} {$ifdef UNIX} {$ifdef VER2_4_0}
+  {$warning FPC 2.4.0 on Linux/x86_64 is known to produce bad glplotter binary with -dRELEASE }
+{$endif} {$endif} {$endif}
+
 { TODO:
   - format pliku: kolor= i specyfikacja koloru wykresu
   - podawanie wlasnego kolor schema parametrami (albo plik ini ?)
