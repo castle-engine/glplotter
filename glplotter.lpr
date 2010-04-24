@@ -1042,7 +1042,7 @@ begin
 
   21: HomeState;
   22: glw.SwapFullScreen;
-  23: glw.SaveScreenDialog(FnameAutoInc('glplotter_screen_%d.png'));
+  23: glw.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
 
   30: SetVisibleAll(false);
   31: SetVisibleAll(true);
