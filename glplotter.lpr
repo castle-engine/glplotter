@@ -557,11 +557,11 @@ procedure Draw(glwin: TGLWindow);
     glColorv(NumbersKol);
     for i := minx to maxx do
     begin
-     glRasterPos2f(i*krok, 0); Font.PrintFmt(LiczbowyString, [i, i*krok]);
+     glRasterPos2f(i*krok, 0); Font.Print(Format(LiczbowyString, [i, i*krok]));
     end;
     for i := miny to maxy do
     begin
-     glRasterPos2f(0, i*krok); Font.PrintFmt(LiczbowyString, [i, i*krok]);
+     glRasterPos2f(0, i*krok); Font.Print(Format(LiczbowyString, [i, i*krok]));
     end;
    end;
   end;
@@ -601,7 +601,7 @@ procedure Draw(glwin: TGLWindow);
      if not points.Items[i].break then
      begin
       glRasterPos2f(points.Items[i].x, points.Items[i].y);
-      Font.PrintFmt('(%f,%f)', [points.Items[i].x, points.Items[i].y]);
+      Font.Print(Format('(%f,%f)', [points.Items[i].x, points.Items[i].y]));
      end;
     end;
    end;
@@ -656,7 +656,7 @@ begin
   glDisable(GL_LINE_STIPPLE);
 
   glRasterPos2f(WSize/2, HSize/2);
-  Font.PrintFmt('%f, %f', [XGLWinToUklad(WSize/2), YGLWinToUklad(HSize/2)]);
+  Font.Print(Format('%f, %f', [XGLWinToUklad(WSize/2), YGLWinToUklad(HSize/2)]));
  end;
 
  if BoolOptions[boMap] then
@@ -666,8 +666,8 @@ begin
   glTranslatef(XPixels(10), YPixels(5), 0);
 
   glRasterPos2i(0, 0);
-  Font.PrintFmt('Scale %f, %f. Move %f, %f. Rotation %f. %d graphs.',
-    [ScaleX, ScaleY, MoveX, MoveY, Rotate, Graphs.Count]);
+  Font.Print(Format('Scale %f, %f. Move %f, %f. Rotation %f. %d graphs.',
+    [ScaleX, ScaleY, MoveX, MoveY, Rotate, Graphs.Count]));
 
   h := YPixels(Font.RowHeight);
   for i := 0 to Graphs.Count-1 do
@@ -678,8 +678,8 @@ begin
    glBegin(GL_LINES); glVertex2f(0, h/2); glVertex2f(5, h/2); glEnd;
    glRasterPos2f(6.5, 0);
    if Graphs[i].Visible then
-    Font.PrintFmt('%d - %s', [i, Graphs[i].Name]) else
-    Font.PrintFmt('{%d - %s}', [i, Graphs[i].Name]);
+    Font.Print(Format('%d - %s', [i, Graphs[i].Name])) else
+    Font.Print(Format('{%d - %s}', [i, Graphs[i].Name]));
   end;
  end;
 end;
