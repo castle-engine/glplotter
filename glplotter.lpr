@@ -323,8 +323,8 @@ var
 
   Note that you shouldn't call this without user explicit request
   (e.g. you shouldn't call this from each EventResize, or even from each
-  EventInit (because when we switch fullscreen on/off we're
-  doing Close + Init again)). After all, user usually wants to preserve it's
+  EventOpen (because when we switch fullscreen on/off we're
+  doing Close + Open again)). After all, user usually wants to preserve it's
   view properties. }
 procedure HomeState;
 var MinX, MaxX, MinY, MaxY: Float;
@@ -819,13 +819,13 @@ begin
  end;
 end;
 
-procedure InitGL(glwin: TGLWindow);
+procedure Open(glwin: TGLWindow);
 begin
  glClearColorv(ColorScheme^[ciBG]^, 1);
  Font := TGLBitmapFont.Create(@BFNT_BitstreamVeraSansMono_m16);
 end;
 
-procedure CloseGL(glwin: TGLWindow);
+procedure Close(glwin: TGLWindow);
 begin
  FreeAndNil(Font);
 end;
@@ -1189,8 +1189,8 @@ begin
       { basic glw callbacks }
       glw.OnIdle := @Idle;
       glw.OnResize := @Resize;
-      glw.OnInit := @InitGL;
-      glw.OnClose := @CloseGL;
+      glw.OnOpen := @Open;
+      glw.OnClose := @Close;
       glw.OnMouseMove := @MouseMove;
       glw.OnDraw := @Draw;
 
@@ -1205,7 +1205,7 @@ begin
 
       GLWinMessagesTheme := GLWinMessagesTheme_TypicalGUI;
 
-      glw.Init;
+      glw.Open;
 
       Application.Run;
     finally Graphs.FreeWithContents end;
