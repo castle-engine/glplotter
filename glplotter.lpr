@@ -137,7 +137,7 @@ begin
   if AColorNumber < IloscGraphKol then
     Color := ColorScheme^[TColorItem(Ord(ciGraph1) + AColorNumber)]^ else
   repeat
-    Color := Vector3f(Random, Random, Random);
+    Color := Vector3Single(Random, Random, Random);
     { Don't allow too dark colors, as they are not visible... }
   until GrayscaleValue(Color) >= 0.2;
 
