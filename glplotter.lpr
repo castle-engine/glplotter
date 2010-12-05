@@ -302,7 +302,7 @@ const
 { inne zmienne globalne -------------------------------------------------- }
 
 var
-  Glw: TGLWindowDemo;
+  Window: TGLWindowDemo;
 
   WSize, HSize: TGLfloat; { rozmiary jakie ma okno we wspolrzednych OpenGL'a }
 
@@ -381,7 +381,7 @@ begin
   MoveY := HSize/2 - MiddleY * ScaleY;
  end;
 
- glw.PostRedisplay;
+ Window.PostRedisplay;
 end;
 
 { funkcje XYGLWinToUklad pobieraja pozycje we wspolrzednej okna OpenGL'a
@@ -398,10 +398,10 @@ begin result:=(glWinY-MoveY)/ScaleY end;
   dla OpenGL'a). Nie bierze pod uwage aktualnego modelview matrix (a wiec
   dziala jakby MoveX = MoveY = 0 i ScaleX/Y = 1). }
 function XPixels(pixX: TGLfloat): TGLfloat;
-begin result := pixX*WSize/glw.width end;
+begin result := pixX*WSize/Window.width end;
 
 function YPixels(pixY: TGLfloat): TGLfloat;
-begin result := pixY*HSize/glw.height end;
+begin result := pixY*HSize/Window.height end;
 
 var
   GraphsListMenu: TMenu;
@@ -444,7 +444,7 @@ begin
   except
     on E: Exception do
     begin
-      MessageOK(Glw, Format('Error when opening graph from file "%s": %s',
+      MessageOK(Window, Format('Error when opening graph from file "%s": %s',
         [FileName, E.Message]), taLeft);
       Exit;
     end;
@@ -469,14 +469,14 @@ begin
   except
     on E: EKamScriptSyntaxError do
     begin
-      MessageOK(Glw, Format(
+      MessageOK(Window, Format(
         'Error when parsing function expression at position %d: %s',
         [E.LexerTextPos, E.Message]), taLeft);
       Exit;
     end;
     on E: EKamScriptError do
     begin
-      MessageOK(Glw, Format(
+      MessageOK(Window, Format(
         'Error %s in function expression: %s',
         [E.ClassName, E.Message]), taLeft);
       Exit;
@@ -488,7 +488,7 @@ end;
 
 { registered glw callbacks -------------------------------------------------- }
 
-procedure Draw(glwin: TGLWindow);
+procedure Draw(Window: TGLWindow);
 
   procedure ShowGridNumScale(
     const krok: extended; const LiczbowyString: string;
@@ -687,12 +687,12 @@ end;
 var
   IdleFirst: boolean = true;
 
-procedure Idle(glwin: TGLWindow);
+procedure Idle(Window: TGLWindow);
 
   function SpeedFactor: TGLfloat;
   begin
-   Result := glwin.Fps.IdleSpeed * 50; { to make everything time-based }
-   if glwin.Pressed[K_Ctrl] then Result *= 10;
+   Result := Window.Fps.IdleSpeed * 50; { to make everything time-based }
+   if Window.Pressed[K_Ctrl] then Result *= 10;
   end;
 
   procedure MultiplyGLScale(Multiplier: TGLfloat);
@@ -713,7 +713,7 @@ procedure Idle(glwin: TGLWindow);
     MoveX:=(MoveX-WSize/2)*Multiplier + WSize/2;
     MoveY:=(MoveY-HSize/2)*Multiplier + HSize/2;
 
-    glwin.PostRedisplay;
+    Window.PostRedisplay;
   end;
 
   procedure MultiplyGLScaleX(Multiplier: TGLfloat);
@@ -726,7 +726,7 @@ procedure Idle(glwin: TGLWindow);
 
     MoveX := (MoveX-WSize/2) * Multiplier + WSize/2;
 
-    glwin.PostRedisplay;
+    Window.PostRedisplay;
   end;
 
   procedure MultiplyGLScaleY(Multiplier: TGLfloat);
@@ -739,13 +739,13 @@ procedure Idle(glwin: TGLWindow);
 
     MoveY := (MoveY-HSize/2) * Multiplier + HSize/2;
 
-    glwin.PostRedisplay;
+    Window.PostRedisplay;
   end;
 
   procedure AddGL(var Value: TGLfloat; const Change: TGLfloat);
   begin
    Value += Change * SpeedFactor;
-   glwin.PostRedisplay;
+   Window.PostRedisplay;
   end;
 
   { Interpretuje wszystkie pozostale ParStr(1) .. ParStr(ParCount) jako
@@ -768,7 +768,7 @@ begin
     IdleFirst := false;
   end;
 
- with glwin do begin
+ with Window do begin
   if Pressed[K_Up] then AddGL(MoveY, -1);
   if Pressed[K_Down] then AddGL(MoveY, +1);
 
@@ -799,33 +799,33 @@ begin
  end;
 end;
 
-procedure Resize(glwin: TGLWindow);
+procedure Resize(Window: TGLWindow);
 begin
- glViewport(0, 0, glwin.Width, glwin.Height);
+ glViewport(0, 0, Window.Width, Window.Height);
  WSize := 50;
- HSize := WSize * glwin.Height/glwin.Width;
+ HSize := WSize * Window.Height/Window.Width;
  ProjectionGLOrtho(0, WSize, 0, HSize);
 end;
 
-procedure MouseMove(glwin: TGLWindow; newX, newY: integer);
+procedure MouseMove(Window: TGLWindow; newX, newY: integer);
 begin
- if mbLeft in glwin.mousePressed then
+ if mbLeft in Window.mousePressed then
  begin
   { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
     ostatniego MouseMove/Down }
-  MoveX := MoveX + XPixels(newX-glwin.MouseX);
-  MoveY := MoveY - YPixels(newY-glwin.MouseY); { y jest mierzone w przeciwna strone, stad minus }
-  glw.PostRedisplay;
+  MoveX := MoveX + XPixels(newX-Window.MouseX);
+  MoveY := MoveY - YPixels(newY-Window.MouseY); { y jest mierzone w przeciwna strone, stad minus }
+  Window.PostRedisplay;
  end;
 end;
 
-procedure Open(glwin: TGLWindow);
+procedure Open(Window: TGLWindow);
 begin
  glClearColorv(ColorScheme^[ciBG]^, 1);
  Font := TGLBitmapFont.Create(@BFNT_BitstreamVeraSansMono_m16);
 end;
 
-procedure Close(glwin: TGLWindow);
+procedure Close(Window: TGLWindow);
 begin
  FreeAndNil(Font);
 end;
@@ -909,7 +909,7 @@ begin
  M := TMenu.Create('_Other');
    M.Append(TMenuItem.Create('_Restore Default View',     21, K_Home));
    M.Append(TMenuItemChecked.Create('_Full Screen', 22, K_F11,
-     glw.FullScreen, true));
+     Window.FullScreen, true));
    M.Append(TMenuItem.Create('_Save Screen ...',       23, K_F5));
    Result.Append(M);
  M := TMenu.Create('_Help');
@@ -924,14 +924,14 @@ var
   LastInputX2: string = '1';
   LastInputXStep: string = '0.1';
 
-procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
+procedure MenuCommand(Window: TGLWindow; Item: TMenuItem);
 
   procedure SetVisibleAll(Value: boolean);
   var i: Integer;
   begin
    for i := 0 to Graphs.Count - 1 do
     Graphs[i].Visible := Value;
-   glwin.PostRedisplay;
+   Window.PostRedisplay;
   end;
 
   procedure OpenOrAddGraphFromFile(Open: boolean);
@@ -942,7 +942,7 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
     if Open then
       S := 'Open graph from file' else
       S := 'Add graph from file';
-    if Glwin.FileDialog(S, FileName, true) then
+    if Window.FileDialog(S, FileName, true) then
       OpenOrAddGraphFromFileCore(Open, FileName);
   end;
 
@@ -959,13 +959,13 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
     XStep := LastInputXStep;
 
     Result :=
-      MessageInputQuery(Glwin,
+      MessageInputQuery(Window,
         'Function expression :' + nl + nl +
         '(where x is the function argument, e.g. "x * 2")',
         Expression, taLeft) and
-      MessageInputQuery(Glwin, 'First X value :' + SYouCan, X1, taLeft) and
-      MessageInputQuery(Glwin, 'Last X value :'  + SYouCan, X2, taLeft) and
-      MessageInputQuery(Glwin, 'X value step :'  + SYouCan, XStep, taLeft);
+      MessageInputQuery(Window, 'First X value :' + SYouCan, X1, taLeft) and
+      MessageInputQuery(Window, 'Last X value :'  + SYouCan, X2, taLeft) and
+      MessageInputQuery(Window, 'X value step :'  + SYouCan, XStep, taLeft);
 
     LastInputX1 := X1;
     LastInputX2 := X2;
@@ -1019,7 +1019,7 @@ procedure MenuCommand(glwin: TGLWindow; Item: TMenuItem);
 var bo: TBoolOption;
 begin
  case Item.IntData of
-  5:  MessageOK(glwin,
+  5:  MessageOK(Window,
         ['Keys to change view (not available as menu items):',
          '  arrows      : move',
          '  +/-         : scale',
@@ -1030,7 +1030,7 @@ begin
          '',
          'You can also move view by dragging while holding left mouse button.'],
          taLeft);
-  6:  MessageOK(glwin,
+  6:  MessageOK(Window,
         [ 'glplotter: plotting graphs, of functions and others.',
           'Version ' + Version,
           'By Michalis Kamburelis.',
@@ -1038,11 +1038,11 @@ begin
           '[http://vrmlengine.sourceforge.net/glplotter_and_gen_function.php]',
           '',
           'Compiled with ' + SCompilerDescription +'.' ], taLeft);
-  10: glwin.Close;
+  10: Window.Close;
 
   21: HomeState;
-  22: glw.SwapFullScreen;
-  23: glw.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
+  22: (Window as TGLUIWindow).SwapFullScreen;
+  23: Window.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
 
   30: SetVisibleAll(false);
   31: SetVisibleAll(true);
@@ -1065,11 +1065,11 @@ begin
   1000..2000:
     begin
      with Graphs[Item.IntData-1000] do Visible := not Visible;
-     glwin.PostRedisplay;
+     Window.PostRedisplay;
     end;
   else Exit;
  end;
- glwin.PostRedisplay;
+ Window.PostRedisplay;
 end;
 
 { params parsing ------------------------------------------------------------ }
@@ -1171,7 +1171,7 @@ end;
 { main ------------------------------------------------------------ }
 
 begin
-  Glw := TGLWindowDemo.Create(Application);
+  Window := TGLWindowDemo.Create(Application);
 
   { initialize RecentMenu }
   RecentMenu := TGLRecentFiles.Create(nil);
@@ -1183,29 +1183,29 @@ begin
     try
       { parse parameters }
       ParseParametersBoolOptions;
-      glw.ParseParameters;
+      Window.ParseParameters;
       ParseParameters(Options, @OptionProc, nil);
 
       { basic glw callbacks }
-      glw.OnIdle := @Idle;
-      glw.OnResize := @Resize;
-      glw.OnOpen := @Open;
-      glw.OnClose := @Close;
-      glw.OnMouseMove := @MouseMove;
-      glw.OnDraw := @Draw;
+      Window.OnIdle := @Idle;
+      Window.OnResize := @Resize;
+      Window.OnOpen := @Open;
+      Window.OnClose := @Close;
+      Window.OnMouseMove := @MouseMove;
+      Window.OnDraw := @Draw;
 
       { setup menu }
-      glw.MainMenu := GetMainMenu;
-      glw.OnMenuCommand := @MenuCommand;
+      Window.MainMenu := GetMainMenu;
+      Window.OnMenuCommand := @MenuCommand;
 
       { other glw options }
-      glw.Fps.Active := true;
-      glw.SetDemoOptions(K_None, #0, false);
-      glw.Caption := 'glplotter';
+      Window.Fps.Active := true;
+      Window.SetDemoOptions(K_None, #0, false);
+      Window.Caption := 'glplotter';
 
       GLWinMessagesTheme := GLWinMessagesTheme_TypicalGUI;
 
-      glw.Open;
+      Window.Open;
 
       Application.Run;
     finally Graphs.FreeWithContents end;
