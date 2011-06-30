@@ -40,7 +40,7 @@ program glplotter;
 {$apptype GUI}
 
 uses
-  SysUtils, GL, GLU, GLExt, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
+  SysUtils, GL, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
   KambiClassUtils, GLWinMessages, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
   KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
