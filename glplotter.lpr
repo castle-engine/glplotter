@@ -253,9 +253,7 @@ begin
 end;
 
 type
-  TObjectsListItem_1 = TGraph;
-  {$I ObjectsList_1.inc}
-  type TGraphsList = TObjectsList_1;
+  TGraphsList = specialize TFPGObjectList<TGraph>;
 
 var Graphs: TGraphsList;
 
@@ -842,7 +840,7 @@ procedure OpenOrAddGraphFromFileCore(Open: boolean; const FileName: string);
 begin
   if Open then
   begin
-    Graphs.FreeContents;
+    Graphs.Clear;
     GraphsAddFromFile(FileName);
     UpdateGraphsMenu;
     HomeState;
@@ -980,7 +978,7 @@ procedure MenuCommand(Window: TGLWindow; Item: TMenuItem);
   begin
     if GetExpression(Expression, X1, X2, XStep) then
     begin
-      Graphs.FreeContents;
+      Graphs.Clear;
       GraphsAddFromExpression(Expression, X1, X2, XStep);
       UpdateGraphsMenu;
       HomeState;
@@ -1012,7 +1010,7 @@ procedure MenuCommand(Window: TGLWindow; Item: TMenuItem);
 
   procedure CloseAllGraphs;
   begin
-    Graphs.FreeContents;
+    Graphs.Clear;
     UpdateGraphsMenu;
     HomeState;
   end;
@@ -1180,7 +1178,7 @@ begin
     RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
 
-    Graphs := TGraphsList.Create(false);
+    Graphs := TGraphsList.Create(true);
     try
       { parse parameters }
       ParseParametersBoolOptions;
@@ -1209,7 +1207,7 @@ begin
       Window.Open;
 
       Application.Run;
-    finally Graphs.FreeWithContents end;
+    finally FreeAndNil(Graphs) end;
   finally
     { finalize RecentMenu }
     if RecentMenu <> nil then
