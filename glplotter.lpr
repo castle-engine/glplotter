@@ -44,7 +44,8 @@ uses
   KambiClassUtils, GLWinMessages, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
   KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
-  GLWindowRecentFiles, GLPlotterConfig, GLImages;
+  GLWindowRecentFiles, GLPlotterConfig, GLImages,
+  FGL {$ifdef VER2_2}, FGLObjectList22 {$endif};
 
 {$define read_interface}
 {$define read_implementation}
