@@ -1179,7 +1179,7 @@ begin
     RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
 
-    Graphs := TGraphsList.Create;
+    Graphs := TGraphsList.Create(false);
     try
       { parse parameters }
       ParseParametersBoolOptions;
