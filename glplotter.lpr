@@ -253,9 +253,9 @@ begin
 end;
 
 type
-  TGraphsList = specialize TFPGObjectList<TGraph>;
+  TGraphList = specialize TFPGObjectList<TGraph>;
 
-var Graphs: TGraphsList;
+var Graphs: TGraphList;
 
 { BoolOptions -------------------------------------------------------- }
 
@@ -1178,7 +1178,7 @@ begin
     RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
 
-    Graphs := TGraphsList.Create(true);
+    Graphs := TGraphList.Create(true);
     try
       { parse parameters }
       ParseParametersBoolOptions;
