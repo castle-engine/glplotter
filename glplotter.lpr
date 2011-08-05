@@ -42,7 +42,7 @@ program glplotter;
 uses
   SysUtils, GL, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
   KambiClassUtils, GLWinMessages, OpenGLBmpFonts,
-  BFNT_BitstreamVeraSansMono_m16_Unit, ParseParametersUnit, VectorMath,
+  BFNT_BitstreamVeraSansMono_m16_Unit, KambiParameters, VectorMath,
   KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
   GLWindowRecentFiles, GLPlotterConfig, GLImages,
   FGL {$ifdef VER2_2}, FGLObjectList22 {$endif};
@@ -1100,7 +1100,7 @@ begin
    Options.Add(Option);
   end;
 
-  ParseParameters(Options, @BoolOptionsOptionProc, nil, true);
+  Parameters.Parse(Options, @BoolOptionsOptionProc, nil, true);
  finally Options.Free end;
 end;
 
@@ -1183,7 +1183,7 @@ begin
       { parse parameters }
       ParseParametersBoolOptions;
       Window.ParseParameters;
-      ParseParameters(Options, @OptionProc, nil);
+      Parameters.Parse(Options, @OptionProc, nil);
 
       { basic glw callbacks }
       Window.OnIdle := @Idle;
