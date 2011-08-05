@@ -215,7 +215,7 @@ constructor TGraph.CreateFromFile(const FileName: string; AColorNumber: Integer)
      xy.Break := SameText(line, SBreakLine);
      { stworz nowy punkt, chyba ze to jest linia z breakiem i (poprzednia linia
        tez byla z breakiem lub nie bylo poprzednej linii) }
-     if not (xy.Break and ((Points.Count = 0) or Points.Items[Points.High].Break) ) then
+     if not (xy.Break and ((Points.Count = 0) or Points.Last.Break) ) then
      begin
       if not xy.Break then DeFormat(line, '%f %f', [@xy.x, @xy.y]);
       Points.Add(xy);
