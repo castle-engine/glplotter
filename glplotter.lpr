@@ -45,7 +45,7 @@ uses
   BFNT_BitstreamVeraSansMono_m16_Unit, KambiParameters, VectorMath,
   KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
   GLWindowRecentFiles, GLPlotterConfig, GLImages,
-  FGL {$ifdef VER2_2}, FGLObjectList22 {$endif};
+  FGL {$ifdef VER2_2}, FGLObjectList22 {$endif}, GenericStructList;
 
 {$define read_interface}
 {$define read_implementation}
@@ -95,11 +95,7 @@ type
   end;
   PXY = ^TXY;
 
-  TDynArrayItem_1 = TXY;
-  PDynArrayItem_1 = PXY;
-  {$define DYNARRAY_1_IS_STRUCT}
-  {$I DynArray_1.inc}
-  type TDynXYArray = TDynArray_1;
+  TDynXYArray = specialize TGenericStructList<TXY>;
 
 type
   TGraph = class
@@ -178,10 +174,10 @@ begin
         X.Value := X1 + I * XStep;
         Y := Expr.TryExecuteMath as TKamScriptFloat;
 
-        Points.Items[I].X := X.Value;
-        Points.Items[I].Break := Y = nil;
+        Points.List^[I].X := X.Value;
+        Points.List^[I].Break := Y = nil;
         if Y <> nil then
-          Points.Items[I].Y := Y.Value;
+          Points.List^[I].Y := Y.Value;
       end;
     finally FreeAndNil(Expr) end;
   finally FreeAndNil(X) end;
@@ -195,8 +191,6 @@ constructor TGraph.CreateFromFile(const FileName: string; AColorNumber: Integer)
   const SNameLine = 'name=';
         SBreakLine = 'break';
   begin
-   Points.AllowedCapacityOverflow := 100;
-
    Name := AName;
 
    { load Points from PointsFile }
@@ -339,10 +333,10 @@ begin
  for i := 0 to Graphs.Count-1 do
   for j := 0 to Graphs[i].Points.Count-1 do
   begin
-   MinX := KambiUtils.Min(MinX, Graphs[i].Points.Items[j].x);
-   MinY := KambiUtils.Min(MinY, Graphs[i].Points.Items[j].y);
-   MaxX := KambiUtils.Max(MaxX, Graphs[i].Points.Items[j].x);
-   MaxY := KambiUtils.Max(MaxY, Graphs[i].Points.Items[j].y);
+   MinX := KambiUtils.Min(MinX, Graphs[i].Points.List^[j].x);
+   MinY := KambiUtils.Min(MinY, Graphs[i].Points.List^[j].y);
+   MaxX := KambiUtils.Max(MaxX, Graphs[i].Points.List^[j].x);
+   MaxY := KambiUtils.Max(MaxY, Graphs[i].Points.List^[j].y);
   end;
 
  if MinX = MaxFloat then
@@ -577,30 +571,30 @@ procedure Draw(Window: TGLWindow);
      glPointSize(3);
      glBegin(GL_POINTS);
      for i := 0 to Points.Count-1 do
-      if not points.Items[i].break then
-       glVertex2f(points.Items[i].x, points.Items[i].y);
+      if not points.List^[i].break then
+       glVertex2f(points.List^[i].x, points.List^[i].y);
      glEnd;
      glPointSize(1);
     end else
     begin
      glBegin(GL_LINE_STRIP);
       for i := 0 to Points.Count-1 do
-       if points.Items[i].break then
+       if points.List^[i].break then
        begin
         glEnd;
         glBegin(GL_LINE_STRIP);
        end else
-        glVertex2f(points.Items[i].x, points.Items[i].y);
+        glVertex2f(points.List^[i].x, points.List^[i].y);
      glEnd;
     end;
 
     if BoolOptions[boPointsCoords] then
     begin
      for i := 0 to Points.Count-1 do
-     if not points.Items[i].break then
+     if not points.List^[i].break then
      begin
-      glRasterPos2f(points.Items[i].x, points.Items[i].y);
-      Font.Print(Format('(%f,%f)', [points.Items[i].x, points.Items[i].y]));
+      glRasterPos2f(points.List^[i].x, points.List^[i].y);
+      Font.Print(Format('(%f,%f)', [points.List^[i].x, points.List^[i].y]));
      end;
     end;
    end;
