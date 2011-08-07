@@ -174,10 +174,10 @@ begin
         X.Value := X1 + I * XStep;
         Y := Expr.TryExecuteMath as TKamScriptFloat;
 
-        Points.List^[I].X := X.Value;
-        Points.List^[I].Break := Y = nil;
+        Points.L[I].X := X.Value;
+        Points.L[I].Break := Y = nil;
         if Y <> nil then
-          Points.List^[I].Y := Y.Value;
+          Points.L[I].Y := Y.Value;
       end;
     finally FreeAndNil(Expr) end;
   finally FreeAndNil(X) end;
@@ -333,10 +333,10 @@ begin
  for i := 0 to Graphs.Count-1 do
   for j := 0 to Graphs[i].Points.Count-1 do
   begin
-   MinX := KambiUtils.Min(MinX, Graphs[i].Points.List^[j].x);
-   MinY := KambiUtils.Min(MinY, Graphs[i].Points.List^[j].y);
-   MaxX := KambiUtils.Max(MaxX, Graphs[i].Points.List^[j].x);
-   MaxY := KambiUtils.Max(MaxY, Graphs[i].Points.List^[j].y);
+   MinX := KambiUtils.Min(MinX, Graphs[i].Points.L[j].x);
+   MinY := KambiUtils.Min(MinY, Graphs[i].Points.L[j].y);
+   MaxX := KambiUtils.Max(MaxX, Graphs[i].Points.L[j].x);
+   MaxY := KambiUtils.Max(MaxY, Graphs[i].Points.L[j].y);
   end;
 
  if MinX = MaxFloat then
@@ -571,30 +571,30 @@ procedure Draw(Window: TGLWindow);
      glPointSize(3);
      glBegin(GL_POINTS);
      for i := 0 to Points.Count-1 do
-      if not points.List^[i].break then
-       glVertex2f(points.List^[i].x, points.List^[i].y);
+      if not points.L[i].break then
+       glVertex2f(points.L[i].x, points.L[i].y);
      glEnd;
      glPointSize(1);
     end else
     begin
      glBegin(GL_LINE_STRIP);
       for i := 0 to Points.Count-1 do
-       if points.List^[i].break then
+       if points.L[i].break then
        begin
         glEnd;
         glBegin(GL_LINE_STRIP);
        end else
-        glVertex2f(points.List^[i].x, points.List^[i].y);
+        glVertex2f(points.L[i].x, points.L[i].y);
      glEnd;
     end;
 
     if BoolOptions[boPointsCoords] then
     begin
      for i := 0 to Points.Count-1 do
-     if not points.List^[i].break then
+     if not points.L[i].break then
      begin
-      glRasterPos2f(points.List^[i].x, points.List^[i].y);
-      Font.Print(Format('(%f,%f)', [points.List^[i].x, points.List^[i].y]));
+      glRasterPos2f(points.L[i].x, points.L[i].y);
+      Font.Print(Format('(%f,%f)', [points.L[i].x, points.L[i].y]));
      end;
     end;
    end;
