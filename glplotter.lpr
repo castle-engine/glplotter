@@ -95,7 +95,7 @@ type
   end;
   PXY = ^TXY;
 
-  TDynXYArray = specialize TGenericStructList<TXY>;
+  TXYList = specialize TGenericStructList<TXY>;
 
 type
   TGraph = class
@@ -105,7 +105,7 @@ type
     procedure CreateCommon(AColorNumber: Integer);
   public
     MenuItem: TMenuItemChecked;
-    Points: TDynXYArray;
+    Points: TXYList;
     Color: TVector3f;
     Name: string;
     property Visible: boolean read FVisible write SetVisible;
@@ -139,7 +139,7 @@ begin
   until GrayscaleValue(Color) >= 0.2;
 
   { initialize Points }
-  Points := TDynXYArray.Create;
+  Points := TXYList.Create;
 
   FVisible := true;
 end;
@@ -1078,10 +1078,10 @@ end;
 procedure ParseParametersBoolOptions;
 var
   bo: TBoolOption;
-  Options: TDynOptionArray;
+  Options: TOptionList;
   Option: TOption;
 begin
- Options := TDynOptionArray.Create;
+ Options := TOptionList.Create;
  try
   Option.Short := #0;
   Option.Argument := oaNone;
