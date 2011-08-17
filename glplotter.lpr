@@ -279,12 +279,6 @@ const
     'G', 'S', 'N',
     CtrlG, CtrlS, CtrlN,
     'o' );
-  BoolOptionsParamsNames: array[TBoolOption]of string =
-  ( 'crosshair', 'point-coords', 'main-xy-lines', 'map',
-    'grid-1',      'num-scale-1',      'numbers-1',
-    'grid-pi',     'num-scale-pi',     'numbers-pi',
-    'grid-custom', 'num-scale-custom', 'numbers-custom',
-    'only-points');
   BoolOptionsMenuNames: array[TBoolOption]of string =
   ( 'Crosshair', 'Point Coordinates', 'Main XY lines', 'Map',
     'Grid 1',      'NumScale 1',      'Numbers 1',
@@ -1067,37 +1061,6 @@ end;
 
 { params parsing ------------------------------------------------------------ }
 
-procedure BoolOptionsOptionProc(OptionNum: Integer; HasArgument: boolean;
-  const Argument: string; const SeparateArgs: TSeparateArgs; Data: Pointer);
-var bo: TBoolOption;
-begin
- bo := TBoolOption(OptionNum div 2);
- BoolOptions[bo] := not Odd(OptionNum);
-end;
-
-procedure ParseParametersBoolOptions;
-var
-  bo: TBoolOption;
-  Options: TOptionList;
-  Option: TOption;
-begin
- Options := TOptionList.Create;
- try
-  Option.Short := #0;
-  Option.Argument := oaNone;
-
-  for bo := Low(bo) to High(bo) do
-  begin
-   Option.Long := BoolOptionsParamsNames[bo];
-   Options.Add(Option);
-   Option.Long := 'no-' +BoolOptionsParamsNames[bo];
-   Options.Add(Option);
-  end;
-
-  Parameters.Parse(Options, @BoolOptionsOptionProc, nil, true);
- finally Options.Free end;
-end;
-
 const
   DisplayProgramName = 'glplotter';
   Options: array[0..4] of TOption = (
@@ -1110,15 +1073,6 @@ const
 
 procedure OptionProc(OptionNum: Integer; HasArgument: boolean;
   const Argument: string; const SeparateArgs: TSeparateArgs; Data: Pointer);
-
-  function BoolOptionsParamsHelp: string;
-  var bo: TBoolOption;
-  begin
-   Result := '';
-   for bo := Low(bo) to High(bo) do
-    Result += Format('  --%-20s --no-%0:s' +nl, [BoolOptionsParamsNames[bo]]);
-  end;
-
 var HelpTextParts: array[0..1]of string;
 begin
  case OptionNum of
@@ -1136,10 +1090,7 @@ begin
         '  --light               Set color scheme to light' +nl+
         '  --drak                Set color scheme to dark' +nl+
         '  --custom-size / -c SIZE' +nl+
-        '                        Set size of custom grid etc.' +nl+
-        nl+
-        'Options that set initial visibility of various things:' +nl+
-        BoolOptionsParamsHelp;
+        '                        Set size of custom grid';
       HelpTextParts[1] :=
          TGLWindow.ParseParametersHelp(StandardParseOptions, true) +nl+
          nl+
@@ -1175,7 +1126,6 @@ begin
     Graphs := TGraphList.Create(true);
     try
       { parse parameters }
-      ParseParametersBoolOptions;
       Window.ParseParameters;
       Parameters.Parse(Options, @OptionProc, nil);
 
