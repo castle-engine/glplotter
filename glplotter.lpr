@@ -1022,7 +1022,7 @@ begin
           'Version ' + Version,
           'By Michalis Kamburelis.',
           '',
-          '[http://vrmlengine.sourceforge.net/glplotter_and_gen_function.php]',
+          '[http://castle-engine.sourceforge.net/glplotter_and_gen_function.php]',
           '',
           'Compiled with ' + SCompilerDescription +'.' ], taLeft);
   10: Window.Close;
@@ -1094,7 +1094,7 @@ begin
       HelpTextParts[1] :=
          TGLWindow.ParseParametersHelp(StandardParseOptions, true) +nl+
          nl+
-         SVrmlEngineProgramHelpSuffix(DisplayProgramName, Version, true);
+         SCastleEngineProgramHelpSuffix(DisplayProgramName, Version, true);
       { I can't simply construct HelpTextParts "on the fly" when
         calling InfoWriteParts due to bugs in FPC 1.9.6, already fixed
         in FPC 1.9.7 from 2005-02-01. }
