@@ -1143,7 +1143,6 @@ begin
 
       { other glw options }
       Window.Fps.Active := true;
-      Window.SetDemoOptions(K_None, #0, false);
       Window.Caption := 'glplotter';
 
       GLWinMessagesTheme := GLWinMessagesTheme_TypicalGUI;
