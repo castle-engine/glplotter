@@ -40,11 +40,11 @@ program glplotter;
 {$apptype GUI}
 
 uses
-  SysUtils, GL, GLWindow, CastleUtils, CastleGLUtils, Math, Classes,
-  CastleClassUtils, GLWinMessages, OpenGLBmpFonts,
+  SysUtils, GL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
+  CastleClassUtils, CastleMessages, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, VectorMath,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
-  GLWindowRecentFiles, GLPlotterConfig, GLImages,
+  CastleRecentFiles, GLPlotterConfig, GLImages,
   FGL {$ifdef VER2_2}, FGLObjectList22 {$endif}, GenericStructList;
 
 {$define read_interface}
@@ -1145,7 +1145,7 @@ begin
       Window.Fps.Active := true;
       Window.Caption := 'glplotter';
 
-      GLWinMessagesTheme := GLWinMessagesTheme_TypicalGUI;
+      MessagesTheme := MessagesTheme_TypicalGUI;
 
       Window.Open;
 
