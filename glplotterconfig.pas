@@ -26,7 +26,7 @@ unit GLPlotterConfig;
 
 interface
 
-uses KambiUtils, KambiXMLConfig;
+uses CastleUtils, CastleXMLConfig;
 
 var
   { User config file.
@@ -36,7 +36,7 @@ var
 
 implementation
 
-uses SysUtils, KambiFilesUtils;
+uses SysUtils, CastleFilesUtils;
 
 { initialization / finalization --------------------------------------------- }
 

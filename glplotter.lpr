@@ -40,10 +40,10 @@ program glplotter;
 {$apptype GUI}
 
 uses
-  SysUtils, GL, GLWindow, KambiUtils, KambiGLUtils, Math, Classes,
-  KambiClassUtils, GLWinMessages, OpenGLBmpFonts,
-  BFNT_BitstreamVeraSansMono_m16_Unit, KambiParameters, VectorMath,
-  KambiStringUtils, KambiFilesUtils, KambiScript, KambiScriptParser,
+  SysUtils, GL, GLWindow, CastleUtils, CastleGLUtils, Math, Classes,
+  CastleClassUtils, GLWinMessages, OpenGLBmpFonts,
+  BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, VectorMath,
+  CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   GLWindowRecentFiles, GLPlotterConfig, GLImages,
   FGL {$ifdef VER2_2}, FGLObjectList22 {$endif}, GenericStructList;
 
@@ -327,10 +327,10 @@ begin
  for i := 0 to Graphs.Count-1 do
   for j := 0 to Graphs[i].Points.Count-1 do
   begin
-   MinX := KambiUtils.Min(MinX, Graphs[i].Points.L[j].x);
-   MinY := KambiUtils.Min(MinY, Graphs[i].Points.L[j].y);
-   MaxX := KambiUtils.Max(MaxX, Graphs[i].Points.L[j].x);
-   MaxY := KambiUtils.Max(MaxY, Graphs[i].Points.L[j].y);
+   MinX := CastleUtils.Min(MinX, Graphs[i].Points.L[j].x);
+   MinY := CastleUtils.Min(MinY, Graphs[i].Points.L[j].y);
+   MaxX := CastleUtils.Max(MaxX, Graphs[i].Points.L[j].x);
+   MaxY := CastleUtils.Max(MaxY, Graphs[i].Points.L[j].y);
   end;
 
  if MinX = MaxFloat then
@@ -354,7 +354,7 @@ begin
 
     By default we set ScaleX and ScaleY to be equal, as this is most
     natural for user. }
-  ScaleX := KambiUtils.Max(KambiUtils.Min(WSize / SizeX, HSize / SizeY), 0.01);
+  ScaleX := CastleUtils.Max(CastleUtils.Min(WSize / SizeX, HSize / SizeY), 0.01);
   ScaleY := ScaleX;
 
   MiddleX := (MinX + MaxX) / 2;
