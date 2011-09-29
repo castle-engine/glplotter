@@ -289,7 +289,7 @@ const
 { inne zmienne globalne -------------------------------------------------- }
 
 var
-  Window: TGLWindowDemo;
+  Window: TCastleWindowDemo;
 
   WSize, HSize: TGLfloat; { rozmiary jakie ma okno we wspolrzednych OpenGL'a }
 
@@ -475,7 +475,7 @@ end;
 
 { registered glw callbacks -------------------------------------------------- }
 
-procedure Draw(Window: TGLWindow);
+procedure Draw(Window: TCastleWindowBase);
 
   procedure ShowGridNumScale(
     const krok: extended; const LiczbowyString: string;
@@ -674,7 +674,7 @@ end;
 var
   IdleFirst: boolean = true;
 
-procedure Idle(Window: TGLWindow);
+procedure Idle(Window: TCastleWindowBase);
 
   function SpeedFactor: TGLfloat;
   begin
@@ -786,7 +786,7 @@ begin
  end;
 end;
 
-procedure Resize(Window: TGLWindow);
+procedure Resize(Window: TCastleWindowBase);
 begin
  glViewport(0, 0, Window.Width, Window.Height);
  WSize := 50;
@@ -794,7 +794,7 @@ begin
  ProjectionGLOrtho(0, WSize, 0, HSize);
 end;
 
-procedure MouseMove(Window: TGLWindow; newX, newY: integer);
+procedure MouseMove(Window: TCastleWindowBase; newX, newY: integer);
 begin
  if mbLeft in Window.mousePressed then
  begin
@@ -806,13 +806,13 @@ begin
  end;
 end;
 
-procedure Open(Window: TGLWindow);
+procedure Open(Window: TCastleWindowBase);
 begin
  glClearColorv(ColorScheme^[ciBG]^, 1);
  Font := TGLBitmapFont.Create(@BFNT_BitstreamVeraSansMono_m16);
 end;
 
-procedure Close(Window: TGLWindow);
+procedure Close(Window: TCastleWindowBase);
 begin
  FreeAndNil(Font);
 end;
@@ -821,7 +821,7 @@ end;
 
 var
   OpenDialogPath: string = '';
-  RecentMenu: TGLRecentFiles;
+  RecentMenu: TCastleRecentFiles;
 
 { This opens/adds graph from file. }
 procedure OpenOrAddGraphFromFileCore(Open: boolean; const FileName: string);
@@ -911,7 +911,7 @@ var
   LastInputX2: string = '1';
   LastInputXStep: string = '0.1';
 
-procedure MenuCommand(Window: TGLWindow; Item: TMenuItem);
+procedure MenuCommand(Window: TCastleWindowBase; Item: TMenuItem);
 
   procedure SetVisibleAll(Value: boolean);
   var i: Integer;
@@ -1028,7 +1028,7 @@ begin
   10: Window.Close;
 
   21: HomeState;
-  22: (Window as TGLUIWindow).SwapFullScreen;
+  22: (Window as TCastleWindowCustom).SwapFullScreen;
   23: Window.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
 
   30: SetVisibleAll(false);
@@ -1092,7 +1092,7 @@ begin
         '  --custom-size / -c SIZE' +nl+
         '                        Set size of custom grid';
       HelpTextParts[1] :=
-         TGLWindow.ParseParametersHelp(StandardParseOptions, true) +nl+
+         TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
          nl+
          SCastleEngineProgramHelpSuffix(DisplayProgramName, Version, true);
       { I can't simply construct HelpTextParts "on the fly" when
@@ -1115,10 +1115,10 @@ end;
 { main ------------------------------------------------------------ }
 
 begin
-  Window := TGLWindowDemo.Create(Application);
+  Window := TCastleWindowDemo.Create(Application);
 
   { initialize RecentMenu }
-  RecentMenu := TGLRecentFiles.Create(nil);
+  RecentMenu := TCastleRecentFiles.Create(nil);
   try
     RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
