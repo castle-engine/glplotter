@@ -148,9 +148,9 @@ constructor TGraph.CreateFromExpression(const Expression: string;
   const X1Str, X2Str, XStepStr: string; AColorNumber: Integer);
 var
   I: Integer;
-  Expr: TKamScriptExpression;
+  Expr: TCasScriptExpression;
   X1, X2, XStep: Extended;
-  X, Y: TKamScriptFloat;
+  X, Y: TCasScriptFloat;
 begin
   inherited Create;
   CreateCommon(AColorNumber);
@@ -161,7 +161,7 @@ begin
 
   Name := Expression;
 
-  X := TKamScriptFloat.Create(false);
+  X := TCasScriptFloat.Create(false);
   try
     X.Name := 'x';
     Expr := ParseFloatExpression(Expression, [X]);
@@ -172,7 +172,7 @@ begin
         { calculate each time X as X1 + I * XStep, this is numerically stable
           (contrary to X += XStep each time. that cummulates errors)  }
         X.Value := X1 + I * XStep;
-        Y := Expr.TryExecuteMath as TKamScriptFloat;
+        Y := Expr.TryExecuteMath as TCasScriptFloat;
 
         Points.L[I].X := X.Value;
         Points.L[I].Break := Y = nil;
@@ -454,14 +454,14 @@ begin
   try
     G := TGraph.CreateFromExpression(Expression, X1, X2, XStep, Graphs.Count);
   except
-    on E: EKamScriptSyntaxError do
+    on E: ECasScriptSyntaxError do
     begin
       MessageOK(Window, Format(
         'Error when parsing function expression at position %d: %s',
         [E.LexerTextPos, E.Message]), taLeft);
       Exit;
     end;
-    on E: EKamScriptError do
+    on E: ECasScriptError do
     begin
       MessageOK(Window, Format(
         'Error %s in function expression: %s',
