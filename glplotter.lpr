@@ -44,7 +44,7 @@ uses
   CastleClassUtils, CastleMessages, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, VectorMath,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
-  CastleRecentFiles, GLPlotterConfig, GLImages,
+  CastleRecentFiles, GLPlotterConfig, GLImages, CastleColors,
   FGL {$ifdef VER2_2}, FGLObjectList22 {$endif}, GenericStructList;
 
 {$define read_interface}
