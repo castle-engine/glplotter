@@ -1142,7 +1142,6 @@ begin
       Window.OnMenuCommand := @MenuCommand;
 
       { other glw options }
-      Window.Fps.Active := true;
       Window.Caption := 'glplotter';
 
       MessagesTheme := MessagesTheme_TypicalGUI;
