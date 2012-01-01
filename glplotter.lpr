@@ -1157,10 +1157,3 @@ begin
     FreeAndNil(RecentMenu);
   end;
 end.
-
-{
-  Local Variables:
-  kam-compile-release-command-unix:    "./compile.sh && mv -fv glplotter      ~/bin/"
-  kam-compile-release-command-windows: "./compile.sh && mv -fv glplotter.exe c:\\\\bin\\\\"
-  End:
-}
