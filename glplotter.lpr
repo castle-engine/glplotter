@@ -791,7 +791,7 @@ begin
  glViewport(0, 0, Window.Width, Window.Height);
  WSize := 50;
  HSize := WSize * Window.Height/Window.Width;
- ProjectionGLOrtho(0, WSize, 0, HSize);
+ OrthoProjection(0, WSize, 0, HSize);
 end;
 
 procedure MouseMove(Window: TCastleWindowBase; newX, newY: integer);
