@@ -44,7 +44,7 @@ uses
   CastleClassUtils, CastleMessages, OpenGLBmpFonts,
   BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, VectorMath,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
-  CastleRecentFiles, GLPlotterConfig, GLImages, CastleColors,
+  CastleRecentFiles, GLImages, CastleColors,
   FGL, GenericStructList, CastleConfig;
 
 {$define read_interface}
@@ -1114,7 +1114,14 @@ end;
 
 { main ------------------------------------------------------------ }
 
+function MyGetApplicationName: string;
 begin
+  Result := 'glplotter';
+end;
+
+begin
+  OnGetApplicationName := @MyGetApplicationName;
+
   Window := TCastleWindowDemo.Create(Application);
 
   { initialize RecentMenu }
