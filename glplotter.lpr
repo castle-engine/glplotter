@@ -45,7 +45,7 @@ uses
   BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, VectorMath,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleRecentFiles, GLPlotterConfig, GLImages, CastleColors,
-  FGL, GenericStructList;
+  FGL, GenericStructList, CastleConfig;
 
 {$define read_interface}
 {$define read_implementation}
@@ -1120,8 +1120,9 @@ begin
   { initialize RecentMenu }
   RecentMenu := TCastleRecentFiles.Create(nil);
   try
-    RecentMenu.LoadFromConfig(ConfigFile, 'recent_files');
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
+
+    Config.Load;
 
     Graphs := TGraphList.Create(true);
     try
@@ -1150,10 +1151,9 @@ begin
 
       Application.Run;
     finally FreeAndNil(Graphs) end;
+
+    Config.Save;
   finally
-    { finalize RecentMenu }
-    if RecentMenu <> nil then
-      RecentMenu.SaveToConfig(ConfigFile, 'recent_files');
     FreeAndNil(RecentMenu);
   end;
 end.
