@@ -44,7 +44,7 @@ uses
   CastleClassUtils, CastleMessages, CastleGLBitmapFonts,
   CastleBitmapFont_BVSansMono_m16, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
-  CastleRecentFiles, GLImages, CastleColors, FGL, GenericStructList, CastleConfig,
+  CastleWindowRecentFiles, GLImages, CastleColors, FGL, GenericStructList, CastleConfig,
   CastleKeysMouse;
 
 {$define read_interface}
@@ -821,7 +821,7 @@ end;
 
 var
   OpenDialogPath: string = '';
-  RecentMenu: TCastleRecentFiles;
+  RecentMenu: TWindowRecentFiles;
 
 { This opens/adds graph from file. }
 procedure OpenOrAddGraphFromFileCore(Open: boolean; const FileName: string);
@@ -1125,7 +1125,7 @@ begin
   Window := TCastleWindowDemo.Create(Application);
 
   { initialize RecentMenu }
-  RecentMenu := TCastleRecentFiles.Create(nil);
+  RecentMenu := TWindowRecentFiles.Create(nil);
   try
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
 
