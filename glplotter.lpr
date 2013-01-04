@@ -42,7 +42,7 @@ program glplotter;
 uses
   SysUtils, GL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
   CastleClassUtils, CastleMessages, OpenGLBmpFonts,
-  BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, VectorMath,
+  BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleRecentFiles, GLImages, CastleColors, FGL, GenericStructList, CastleConfig,
   CastleKeysMouse;
