@@ -8,4 +8,4 @@ do_font2pascal ()
   font2pascal "$@" --dir .
 }
 
-do_font2pascal --font-name 'Bitstream Vera Sans Mono' --font-height -16 --grab-to bfnt
+do_font2pascal --font-name 'Bitstream Vera Sans Mono' --font-height -16 --grab-to bitmap

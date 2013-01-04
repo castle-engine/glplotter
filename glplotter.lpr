@@ -41,8 +41,8 @@ program glplotter;
 
 uses
   SysUtils, GL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
-  CastleClassUtils, CastleMessages, OpenGLBmpFonts,
-  BFNT_BitstreamVeraSansMono_m16_Unit, CastleParameters, CastleVectors,
+  CastleClassUtils, CastleMessages, CastleGLBitmapFonts,
+  CastleBitmapFont_BVSansMono_m16, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleRecentFiles, GLImages, CastleColors, FGL, GenericStructList, CastleConfig,
   CastleKeysMouse;
@@ -809,7 +809,7 @@ end;
 procedure Open(Window: TCastleWindowBase);
 begin
  glClearColorv(ColorScheme^[ciBG]^, 1);
- Font := TGLBitmapFont.Create(@BFNT_BitstreamVeraSansMono_m16);
+ Font := TGLBitmapFont.Create(BitmapFont_BVSansMono_m16);
 end;
 
 procedure Close(Window: TCastleWindowBase);
