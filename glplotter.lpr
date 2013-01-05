@@ -44,8 +44,8 @@ uses
   CastleClassUtils, CastleMessages, CastleGLBitmapFonts,
   CastleBitmapFont_BVSansMono_m16, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
-  CastleWindowRecentFiles, GLImages, CastleColors, FGL, GenericStructList, CastleConfig,
-  CastleKeysMouse;
+  CastleWindowRecentFiles, CastleGLImages, CastleColors, FGL, CastleGenericLists,
+  CastleConfig, CastleKeysMouse;
 
 {$define read_interface}
 {$define read_implementation}
