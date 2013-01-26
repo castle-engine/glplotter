@@ -51,7 +51,7 @@ uses
 {$define read_implementation}
 
 const
-  Version = '1.2.4';
+  Version = '1.2.5';
 
 { colors -------------------------------------------------------------------- }
 
