@@ -911,7 +911,7 @@ var
   LastInputX2: string = '1';
   LastInputXStep: string = '0.1';
 
-procedure MenuCommand(Window: TCastleWindowBase; Item: TMenuItem);
+procedure MenuClick(Window: TCastleWindowBase; Item: TMenuItem);
 
   procedure SetVisibleAll(Value: boolean);
   var i: Integer;
@@ -1147,7 +1147,7 @@ begin
 
       { setup menu }
       Window.MainMenu := GetMainMenu;
-      Window.OnMenuCommand := @MenuCommand;
+      Window.OnMenuClick := @MenuClick;
 
       { other glw options }
       Window.Caption := 'glplotter';
