@@ -400,8 +400,8 @@ var
 const
   GraphsListPrefixNumber = 5;
 begin
-  while GraphsListMenu.EntriesCount > GraphsListPrefixNumber do
-    GraphsListMenu.EntryDelete(GraphsListPrefixNumber);
+  while GraphsListMenu.Count > GraphsListPrefixNumber do
+    GraphsListMenu.Delete(GraphsListPrefixNumber);
 
   for I := 0 to Graphs.Count-1 do
   begin
