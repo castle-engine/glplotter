@@ -672,13 +672,13 @@ begin
 end;
 
 var
-  IdleFirst: boolean = true;
+  UpdateFirst: boolean = true;
 
-procedure Idle(Window: TCastleWindowBase);
+procedure Update(Window: TCastleWindowBase);
 
   function SpeedFactor: TGLfloat;
   begin
-   Result := Window.Fps.IdleSpeed * 50; { to make everything time-based }
+   Result := Window.Fps.UpdateSecondsPassed * 50; { to make everything time-based }
    if Window.Pressed[K_Ctrl] then Result *= 10;
   end;
 
@@ -747,12 +747,12 @@ procedure Idle(Window: TCastleWindowBase);
   end;
 
 begin
-  if IdleFirst then
+  if UpdateFirst then
   begin
     OpenGraphsFromParameters;
     UpdateGraphsMenu;
     HomeState;
-    IdleFirst := false;
+    UpdateFirst := false;
   end;
 
  with Window do begin
@@ -1138,7 +1138,7 @@ begin
       Parameters.Parse(Options, @OptionProc, nil);
 
       { basic glw callbacks }
-      Window.OnIdle := @Idle;
+      Window.OnUpdate := @Update;
       Window.OnResize := @Resize;
       Window.OnOpen := @Open;
       Window.OnClose := @Close;
