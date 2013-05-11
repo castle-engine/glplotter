@@ -6,3 +6,5 @@ compile:
 .PHONY: clean
 clean:
 	rm -f glplotter glplotter.exe
+	rm -Rf glplotter.app
+
