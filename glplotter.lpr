@@ -39,13 +39,12 @@ program glplotter;
 
 {$apptype GUI}
 
-uses
-  SysUtils, GL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
+uses SysUtils, GL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
   CastleClassUtils, CastleMessages, CastleGLBitmapFonts,
   CastleBitmapFont_BVSansMono_m16, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors, FGL, CastleGenericLists,
-  CastleConfig, CastleKeysMouse;
+  CastleConfig, CastleKeysMouse, CastleURIUtils;
 
 {$define read_interface}
 {$define read_implementation}
@@ -110,14 +109,14 @@ type
     Name: string;
     property Visible: boolean read FVisible write SetVisible;
 
-    { Initialize TGraph reading Points from file FileName.
-      FileName = '-' means stdin.
+    { Initialize TGraph reading Points from file URL.
+      URL = '-' means stdin.
 
-      Graph name will be taken from FileName, or (if line "name=..." is
+      Graph name will be taken from URL, or (if line "name=..." is
       present in PointsFile) then it will be used.
 
       @param AColorNumber color number (see TColorItem), counted from 0. }
-    constructor CreateFromFile(const FileName: string;
+    constructor CreateFromFile(const URL: string;
       AColorNumber: Integer);
 
     { Initialize TGraph using function Expression. }
@@ -183,7 +182,7 @@ begin
   finally FreeAndNil(X) end;
 end;
 
-constructor TGraph.CreateFromFile(const FileName: string; AColorNumber: Integer);
+constructor TGraph.CreateFromFile(const URL: string; AColorNumber: Integer);
 
   procedure CreateFromReader(PointsFile: TTextReader; const AName: string);
   var line: string;
@@ -224,12 +223,12 @@ begin
  inherited Create;
  CreateCommon(AColorNumber);
 
- if FileName = '-' then
+ if URL = '-' then
   CreateFromReader(StdInReader, 'stdin') else
  begin
-  Reader := TTextReader.CreateFromFileStream(FileName);
+  Reader := TTextReader.Create(URL);
   try
-   CreateFromReader(Reader, FileName);
+   CreateFromReader(Reader, URL);
   finally FreeAndNil(Reader) end;
  end;
 end;
@@ -422,17 +421,17 @@ end;
 
   It also takes care of setting AColorNumer parameter for TGraph.Create
   as it should be. }
-procedure GraphsAddFromFile(const FileName: string);
+procedure GraphsAddFromFile(const URL: string);
 var
   G: TGraph;
 begin
   try
-    G := TGraph.CreateFromFile(FileName, Graphs.Count);
+    G := TGraph.CreateFromFile(URL, Graphs.Count);
   except
     on E: Exception do
     begin
       MessageOK(Window, Format('Error when opening graph from file "%s": %s',
-        [FileName, E.Message]), taLeft);
+        [URL, E.Message]), taLeft);
       Exit;
     end;
   end;
@@ -820,38 +819,38 @@ end;
 { menu-related things -------------------------------------------------------- }
 
 var
-  OpenDialogPath: string = '';
+  OpenDialogURIPath: string = '';
   RecentMenu: TWindowRecentFiles;
 
 { This opens/adds graph from file. }
-procedure OpenOrAddGraphFromFileCore(Open: boolean; const FileName: string);
+procedure OpenOrAddGraphFromFileCore(Open: boolean; const URL: string);
 begin
   if Open then
   begin
     Graphs.Clear;
-    GraphsAddFromFile(FileName);
+    GraphsAddFromFile(URL);
     UpdateGraphsMenu;
     HomeState;
   end else
   begin
-    GraphsAddFromFile(FileName);
+    GraphsAddFromFile(URL);
     UpdateGraphsMenu;
     { Calling HomeState is not desirable here, maybe user wants to keep
       previous view settings, to see already existing graphs as they were. }
   end;
 
-  RecentMenu.Add(FileName);
-  OpenDialogPath := ExtractFilePath(FileName);
+  RecentMenu.Add(URL);
+  OpenDialogURIPath := ExtractURIPath(URL);
 end;
 
 type
   THelper = class
-    class procedure OpenRecent(const FileName: string);
+    class procedure OpenRecent(const URL: string);
   end;
 
-class procedure THelper.OpenRecent(const FileName: string);
+class procedure THelper.OpenRecent(const URL: string);
 begin
-  OpenOrAddGraphFromFileCore(false, FileName);
+  OpenOrAddGraphFromFileCore(false, URL);
 end;
 
 function GetMainMenu(): TMenu;
@@ -923,14 +922,14 @@ procedure MenuClick(Window: TCastleWindowBase; Item: TMenuItem);
 
   procedure OpenOrAddGraphFromFile(Open: boolean);
   var
-    FileName, S: string;
+    URL, S: string;
   begin
-    FileName := OpenDialogPath;
+    URL := OpenDialogURIPath;
     if Open then
       S := 'Open graph from file' else
       S := 'Add graph from file';
-    if Window.FileDialog(S, FileName, true) then
-      OpenOrAddGraphFromFileCore(Open, FileName);
+    if Window.URLDialog(S, URL, true) then
+      OpenOrAddGraphFromFileCore(Open, URL);
   end;
 
   function GetExpression(out Expression: string;
@@ -1082,7 +1081,7 @@ begin
         nl+
         'Call as' +nl+
         '  glplotter [OPTION]... [FILE]...' +nl+
-        'Each FILE is filename or "-" (meaning stdin).' +nl+
+        'Each FILE is filename (actually, an URL) or "-" (meaning stdin).' +nl+
         nl+
         'Available options are:' +nl+
         HelpOptionHelp +nl+
