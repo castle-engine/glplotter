@@ -928,7 +928,7 @@ procedure MenuClick(Window: TCastleWindowBase; Item: TMenuItem);
     if Open then
       S := 'Open graph from file' else
       S := 'Add graph from file';
-    if Window.URLDialog(S, URL, true) then
+    if Window.FileDialog(S, URL, true) then
       OpenOrAddGraphFromFileCore(Open, URL);
   end;
 
