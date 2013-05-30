@@ -1061,7 +1061,7 @@ end;
 { params parsing ------------------------------------------------------------ }
 
 const
-  DisplayProgramName = 'glplotter';
+  DisplayApplicationName = 'glplotter';
   Options: array[0..4] of TOption = (
     (Short: 'h'; Long: 'help'; Argument: oaNone),
     (Short: 'c'; Long: 'custom-size'; Argument: oaRequired),
@@ -1093,7 +1093,7 @@ begin
       HelpTextParts[1] :=
          TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
          nl+
-         SCastleEngineProgramHelpSuffix(DisplayProgramName, Version, true);
+         SCastleEngineProgramHelpSuffix(DisplayApplicationName, Version, true);
       { I can't simply construct HelpTextParts "on the fly" when
         calling InfoWriteParts due to bugs in FPC 1.9.6, already fixed
         in FPC 1.9.7 from 2005-02-01. }
