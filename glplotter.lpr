@@ -1072,43 +1072,38 @@ const
 
 procedure OptionProc(OptionNum: Integer; HasArgument: boolean;
   const Argument: string; const SeparateArgs: TSeparateArgs; Data: Pointer);
-var HelpTextParts: array[0..1]of string;
 begin
- case OptionNum of
-  0: begin
-      HelpTextParts[0] :=
-        'glplotter: plot lines.' +nl+
-        nl+
-        'Call as' +nl+
-        '  glplotter [OPTION]... [FILE]...' +nl+
-        'Each FILE is filename (actually, an URL) or "-" (meaning stdin).' +nl+
-        nl+
-        'Available options are:' +nl+
-        HelpOptionHelp +nl+
-        VersionOptionHelp +nl+
-        '  --light               Set color scheme to light' +nl+
-        '  --drak                Set color scheme to dark' +nl+
-        '  --custom-size / -c SIZE' +nl+
-        '                        Set size of custom grid';
-      HelpTextParts[1] :=
-         TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
-         nl+
-         SCastleEngineProgramHelpSuffix(DisplayApplicationName, Version, true);
-      { I can't simply construct HelpTextParts "on the fly" when
-        calling InfoWriteParts due to bugs in FPC 1.9.6, already fixed
-        in FPC 1.9.7 from 2005-02-01. }
-      InfoWriteParts('glplotter help (page %d / %d)', HelpTextParts);
-      ProgramBreak;
-     end;
-  1: CustomSize := StrToFloat(Argument);
-  2: ColorScheme := @ColorSchemeLight;
-  3: ColorScheme := @ColorSchemeDark;
-  4: begin
-      WritelnStr(Version);
-      ProgramBreak;
-     end;
-  else raise EInternalError.Create('OptionProc');
- end;
+  case OptionNum of
+    0:begin
+        InfoWrite(
+          'glplotter: plot lines.' +nl+
+          nl+
+          'Call as' +nl+
+          '  glplotter [OPTION]... [FILE]...' +nl+
+          'Each FILE is filename (actually, an URL) or "-" (meaning stdin).' +nl+
+          nl+
+          'Available options are:' +nl+
+          HelpOptionHelp +nl+
+          VersionOptionHelp +nl+
+          '  --light               Set color scheme to light' +nl+
+          '  --drak                Set color scheme to dark' +nl+
+          '  --custom-size / -c SIZE' +nl+
+          '                        Set size of custom grid' +nl+
+          nl+
+          TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
+          nl+
+          SCastleEngineProgramHelpSuffix(DisplayApplicationName, Version, true));
+        ProgramBreak;
+      end;
+    1:CustomSize := StrToFloat(Argument);
+    2:ColorScheme := @ColorSchemeLight;
+    3:ColorScheme := @ColorSchemeDark;
+    4:begin
+        WritelnStr(Version);
+        ProgramBreak;
+      end;
+    else raise EInternalError.Create('OptionProc');
+  end;
 end;
 
 { main ------------------------------------------------------------ }
