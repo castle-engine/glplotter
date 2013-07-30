@@ -894,8 +894,7 @@ begin
    Result.Append(M);
  M := TMenu.Create('_Other');
    M.Append(TMenuItem.Create('_Restore Default View',     21, K_Home));
-   M.Append(TMenuItemChecked.Create('_Full Screen', 22, K_F11,
-     Window.FullScreen, true));
+   M.Append(TMenuItemToggleFullScreen.Create(Window.FullScreen));
    M.Append(TMenuItem.Create('_Save Screen ...',       23, K_F5));
    Result.Append(M);
  M := TMenu.Create('_Help');
@@ -1027,7 +1026,6 @@ begin
   10: Window.Close;
 
   21: HomeState;
-  22: Window.FullScreen := not Window.FullScreen;
   23: Window.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
 
   30: SetVisibleAll(false);
