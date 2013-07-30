@@ -360,7 +360,7 @@ begin
   MiddleY := (MinY + MaxY) / 2;
 
   { MoveX/Y to look at MiddleX/Y.
-    I want XGLWinToUklad(WSize/2) = MiddleX.
+    I want XWindowToUklad(WSize/2) = MiddleX.
     Solve equation (WSize/2-MoveX)/ScaleX = MiddleX for MoveX and you got
     what you need. }
   MoveX := WSize/2 - MiddleX * ScaleX;
@@ -370,14 +370,14 @@ begin
  Window.PostRedisplay;
 end;
 
-{ funkcje XYGLWinToUklad pobieraja pozycje we wspolrzednej okna OpenGL'a
+{ funkcje XYWindowToUklad pobieraja pozycje we wspolrzednej okna OpenGL'a
   (czyli 0..WSize lub HSize) i zwracaja jaka jest pozycja punktu na wykresie
   w tym miejscu okna. Nie biora pod uwage Rotate. }
-function XGLWinToUklad(glWinX: TGLfloat): TGLfloat;
-begin result:=(glWinX-MoveX)/ScaleX end;
+function XWindowToUklad(WindowX: TGLfloat): TGLfloat;
+begin result:=(WindowX-MoveX)/ScaleX end;
 
-function YGLWinToUklad(glWinY: TGLfloat): TGLfloat;
-begin result:=(glWinY-MoveY)/ScaleY end;
+function YWindowToUklad(WindowY: TGLfloat): TGLfloat;
+begin result:=(WindowY-MoveY)/ScaleY end;
 
 { X/YPixels : podajesz argumet = ilosc pixeli. Zwraca ile dla OpenGL'a (biorac
   pod uwage aktualne projection matrix) znaczy tyle pixeli (jaka to jest dlugosc
@@ -495,10 +495,10 @@ procedure Draw(Window: TCastleWindowBase);
 
    { minx to najmniejsza wartosc taka ze minx*krok miesci sie na ekranie.
      Podobnie maxx, miny, maxy. }
-   minx := Ceil(XGLWinToUklad(0) / krok);
-   miny := Ceil(YGLWinToUklad(0) / krok);
-   maxx := Floor(XGLWinToUklad(WSize) / krok);
-   maxy := Floor(YGLWinToUklad(HSize) / krok);
+   minx := Ceil(XWindowToUklad(0) / krok);
+   miny := Ceil(YWindowToUklad(0) / krok);
+   maxx := Floor(XWindowToUklad(WSize) / krok);
+   maxy := Floor(YWindowToUklad(HSize) / krok);
 
    if ShowGrid then
    begin
@@ -509,11 +509,11 @@ procedure Draw(Window: TCastleWindowBase);
       zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
     for i := minx to maxx do
     begin
-     glVertex2f(i*krok, YGLWinToUklad(0)); glVertex2f(i*krok, YGLWinToUklad(HSize));
+     glVertex2f(i*krok, YWindowToUklad(0)); glVertex2f(i*krok, YWindowToUklad(HSize));
     end;
     for i := miny to maxy do
     begin
-     glVertex2f(XGLWinToUklad(0), i*krok); glVertex2f(XGLWinToUklad(WSize), i*krok);
+     glVertex2f(XWindowToUklad(0), i*krok); glVertex2f(XWindowToUklad(WSize), i*krok);
     end;
     glEnd;
    end;
@@ -621,8 +621,8 @@ begin
  begin
   glColorv(ColorScheme^[ciMainXYLines]^);
   glBegin(GL_LINES);
-   glVertex2f(0, YGLWinToUklad(0)); glVertex2f(0, YGLWinToUklad(HSize));
-   glVertex2f(XGLWinToUklad(0), 0); glVertex2f(XGLWinToUklad(WSize), 0);
+   glVertex2f(0, YWindowToUklad(0)); glVertex2f(0, YWindowToUklad(HSize));
+   glVertex2f(XWindowToUklad(0), 0); glVertex2f(XWindowToUklad(WSize), 0);
   glEnd;
  end;
 
@@ -642,7 +642,7 @@ begin
   glDisable(GL_LINE_STIPPLE);
 
   glRasterPos2f(WSize/2, HSize/2);
-  Font.Print(Format('%f, %f', [XGLWinToUklad(WSize/2), YGLWinToUklad(HSize/2)]));
+  Font.Print(Format('%f, %f', [XWindowToUklad(WSize/2), YWindowToUklad(HSize/2)]));
  end;
 
  if BoolOptions[boMap] then
