@@ -819,7 +819,7 @@ end;
 { menu-related things -------------------------------------------------------- }
 
 var
-  OpenDialogURIPath: string = '';
+  OpenURL: string = '';
   RecentMenu: TWindowRecentFiles;
 
 { This opens/adds graph from file. }
@@ -840,7 +840,7 @@ begin
   end;
 
   RecentMenu.Add(URL);
-  OpenDialogURIPath := ExtractURIPath(URL);
+  OpenURL := URL;
 end;
 
 type
@@ -924,7 +924,7 @@ procedure MenuClick(Window: TCastleWindowBase; Item: TMenuItem);
   var
     URL, S: string;
   begin
-    URL := OpenDialogURIPath;
+    URL := OpenURL;
     if Open then
       S := 'Open graph from file' else
       S := 'Add graph from file';
