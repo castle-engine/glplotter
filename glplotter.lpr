@@ -910,7 +910,7 @@ var
   LastInputX2: string = '1';
   LastInputXStep: string = '0.1';
 
-procedure MenuClick(Window: TCastleWindowBase; Item: TMenuItem);
+procedure MenuClick(Sender: TCastleWindowBase; Item: TMenuItem);
 
   procedure SetVisibleAll(Value: boolean);
   var i: Integer;
@@ -1027,7 +1027,7 @@ begin
   10: Window.Close;
 
   21: HomeState;
-  22: (Window as TCastleWindowCustom).SwapFullScreen;
+  22: Window.FullScreen := not Window.FullScreen;
   23: Window.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
 
   30: SetVisibleAll(false);
