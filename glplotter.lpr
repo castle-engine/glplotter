@@ -290,35 +290,23 @@ const
 var
   Window: TCastleWindowDemo;
 
-  WSize, HSize: TGLfloat; { rozmiary jakie ma okno we wspolrzednych OpenGL'a }
-
   CustomSize: TGLfloat = 2.5;
 
   { ponizej rzeczy ktore sa bezposrednio wykorzystywane w DrawGL.
     Ich wartosci poczatkowe sa ustalane w HomeState. }
   MoveX, MoveY: TGLfloat;
   ScaleX, ScaleY: TGLfloat;
-  Rotate: TGLfloat;
 
   Font: TGLBitmapFont;
 
 { global funcs ---------------------------------------------------------- }
 
-{ This resets some view properties to default, such that all Graphs are visible.
-  This may ba called only after ResizeGL (it requires W/HSize set).
-
-  Note that you shouldn't call this without user explicit request
-  (e.g. you shouldn't call this from each EventResize, or even from each
-  EventOpen (because when we switch fullscreen on/off we're
-  doing Close + Open again)). After all, user usually wants to preserve it's
-  view properties. }
+{ Reset view properties to default, such that all Graphs are visible. }
 procedure HomeState;
 var MinX, MaxX, MinY, MaxY: Float;
     MiddleX, MiddleY, SizeX, SizeY: Float;
     i, j: Integer;
 begin
- Rotate := 0;
-
  MinX := MaxFloat;
  MinY := MaxFloat;
  MaxX := -MaxFloat;
@@ -337,8 +325,8 @@ begin
   { This means that there was no points (with Break = false)
     in graphs (maybe there was no graphs at all) !
     So we set default MoveXY (look at the middle) and ScaleXY. }
-  MoveX := WSize/2;
-  MoveY := HSize/2;
+  MoveX := Window.Width/2;
+  MoveY := Window.Height/2;
   ScaleX := 1;
   ScaleY := 1;
  end else
@@ -346,48 +334,50 @@ begin
   SizeX := MaxX - MinX;
   SizeY := MaxY - MinY;
 
-  { When ScaleX/Y = 1, we see WSize and HSize points on graph.
-    But we want to see SizeX and SizeY.
+  { When ScaleX/Y = 1, we see Window.Width/Height pixels.
+    But we want to see SizeX/Y pixels.
     Also we don't want ScaleX/Y to be too little (this makes a lot of trouble,
     and OpenGL rendering also has trouble and crawls surprisingly slowly).
 
     By default we set ScaleX and ScaleY to be equal, as this is most
     natural for user. }
-  ScaleX := CastleUtils.Max(CastleUtils.Min(WSize / SizeX, HSize / SizeY), 0.01);
+  ScaleX := CastleUtils.Max(CastleUtils.Min(Window.Width / SizeX, Window.Height / SizeY), 0.01);
   ScaleY := ScaleX;
 
   MiddleX := (MinX + MaxX) / 2;
   MiddleY := (MinY + MaxY) / 2;
 
   { MoveX/Y to look at MiddleX/Y.
-    I want XWindowToUklad(WSize/2) = MiddleX.
-    Solve equation (WSize/2-MoveX)/ScaleX = MiddleX for MoveX and you got
+    I want XWindowToUklad(Window.Width/2) = MiddleX.
+    Solve equation (Window.Width/2-MoveX)/ScaleX = MiddleX for MoveX and you got
     what you need. }
-  MoveX := WSize/2 - MiddleX * ScaleX;
-  MoveY := HSize/2 - MiddleY * ScaleY;
+  MoveX := Window.Width /2 - MiddleX * ScaleX;
+  MoveY := Window.Height/2 - MiddleY * ScaleY;
  end;
 
  Window.PostRedisplay;
 end;
 
 { funkcje XYWindowToUklad pobieraja pozycje we wspolrzednej okna OpenGL'a
-  (czyli 0..WSize lub HSize) i zwracaja jaka jest pozycja punktu na wykresie
-  w tym miejscu okna. Nie biora pod uwage Rotate. }
+  (czyli 0..Window.Width lub Window.Height)
+  i zwracaja jaka jest pozycja punktu na wykresie
+  w tym miejscu okna. }
 function XWindowToUklad(WindowX: TGLfloat): TGLfloat;
-begin result:=(WindowX-MoveX)/ScaleX end;
+begin result := (WindowX - MoveX) / ScaleX end;
 
 function YWindowToUklad(WindowY: TGLfloat): TGLfloat;
-begin result:=(WindowY-MoveY)/ScaleY end;
+begin result := (WindowY - MoveY) / ScaleY end;
 
-{ X/YPixels : podajesz argumet = ilosc pixeli. Zwraca ile dla OpenGL'a (biorac
-  pod uwage aktualne projection matrix) znaczy tyle pixeli (jaka to jest dlugosc
-  dla OpenGL'a). Nie bierze pod uwage aktualnego modelview matrix (a wiec
-  dziala jakby MoveX = MoveY = 0 i ScaleX/Y = 1). }
-function XPixels(pixX: TGLfloat): TGLfloat;
-begin result := pixX*WSize/Window.width end;
+function XUkladToWindow(UkladX: TGLfloat): TGLfloat;
+begin result := UkladX * ScaleX + MoveX end;
 
-function YPixels(pixY: TGLfloat): TGLfloat;
-begin result := pixY*HSize/Window.height end;
+function YUkladToWindow(UkladY: TGLfloat): TGLfloat;
+begin result := UkladY * ScaleY + MoveY end;
+
+procedure SetWindowPosUklad(const X, Y: Extended);
+begin
+  SetWindowPos(Round(XUkladToWindow(X)), Round(YUkladToWindow(Y)));
+end;
 
 var
   GraphsListMenu: TMenu;
@@ -497,8 +487,8 @@ procedure Draw(Window: TCastleWindowBase);
      Podobnie maxx, miny, maxy. }
    minx := Ceil(XWindowToUklad(0) / krok);
    miny := Ceil(YWindowToUklad(0) / krok);
-   maxx := Floor(XWindowToUklad(WSize) / krok);
-   maxy := Floor(YWindowToUklad(HSize) / krok);
+   maxx := Floor(XWindowToUklad(Window.Width ) / krok);
+   maxy := Floor(YWindowToUklad(Window.Height) / krok);
 
    if ShowGrid then
    begin
@@ -509,11 +499,12 @@ procedure Draw(Window: TCastleWindowBase);
       zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
     for i := minx to maxx do
     begin
-     glVertex2f(i*krok, YWindowToUklad(0)); glVertex2f(i*krok, YWindowToUklad(HSize));
+     glVertex2f(i*krok, YWindowToUklad(0));
+     glVertex2f(i*krok, YWindowToUklad(Window.Height));
     end;
     for i := miny to maxy do
     begin
-     glVertex2f(XWindowToUklad(0), i*krok); glVertex2f(XWindowToUklad(WSize), i*krok);
+     glVertex2f(XWindowToUklad(0), i*krok); glVertex2f(XWindowToUklad(Window.Width), i*krok);
     end;
     glEnd;
    end;
@@ -527,13 +518,13 @@ procedure Draw(Window: TCastleWindowBase);
       zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
     for i := minx to maxx do
     begin
-     glVertex2f(i*krok, -YPixels(NumScaleLength)/ScaleY);
-     glVertex2f(i*krok,+ YPixels(NumScaleLength)/ScaleY);
+     glVertex2f(i*krok, -NumScaleLength/ScaleY);
+     glVertex2f(i*krok,+ NumScaleLength/ScaleY);
     end;
     for i := miny to maxy do
     begin
-     glVertex2f(-XPixels(NumScaleLength)/ScaleX, i*krok);
-     glVertex2f(+XPixels(NumScaleLength)/ScaleX, i*krok);
+     glVertex2f(-NumScaleLength/ScaleX, i*krok);
+     glVertex2f(+NumScaleLength/ScaleX, i*krok);
     end;
     glEnd;
    end;
@@ -543,11 +534,13 @@ procedure Draw(Window: TCastleWindowBase);
     glColorv(NumbersKol);
     for i := minx to maxx do
     begin
-     glRasterPos2f(i*krok, 0); Font.Print(Format(LiczbowyString, [i, i*krok]));
+     SetWindowPosUklad(i*krok, 0);
+     Font.Print(Format(LiczbowyString, [i, i*krok]));
     end;
     for i := miny to maxy do
     begin
-     glRasterPos2f(0, i*krok); Font.Print(Format(LiczbowyString, [i, i*krok]));
+     SetWindowPosUklad(0, i*krok);
+     Font.Print(Format(LiczbowyString, [i, i*krok]));
     end;
    end;
   end;
@@ -586,23 +579,19 @@ procedure Draw(Window: TCastleWindowBase);
      for i := 0 to Points.Count-1 do
      if not points.L[i].break then
      begin
-      glRasterPos2f(points.L[i].x, points.L[i].y);
+      SetWindowPosUklad(points.L[i].x, points.L[i].y);
       Font.Print(Format('(%f,%f)', [points.L[i].x, points.L[i].y]));
      end;
     end;
    end;
   end;
 
-var i, j: integer;
-    h: TGLfloat;
+var
+  i, j: integer;
+  TextY: integer;
 begin
  glClear(GL_COLOR_BUFFER_BIT);
  glLoadIdentity;
-
- {glRotate jest otoczone przez WSize/2, HSize/2 zeby obrot byl wzgledem srodka okienka}
- glTranslatef(WSize/2, HSize/2, 0);
- glRotatef(Rotate, 0, 0, 1);
- glTranslatef(-WSize/2, -HSize/2, 0);
 
  glTranslatef(MoveX, MoveY, 0);
  glScalef(ScaleX, ScaleY, 0);
@@ -621,8 +610,8 @@ begin
  begin
   glColorv(ColorScheme^[ciMainXYLines]^);
   glBegin(GL_LINES);
-   glVertex2f(0, YWindowToUklad(0)); glVertex2f(0, YWindowToUklad(HSize));
-   glVertex2f(XWindowToUklad(0), 0); glVertex2f(XWindowToUklad(WSize), 0);
+   glVertex2f(0, YWindowToUklad(0)); glVertex2f(0, YWindowToUklad(Window.Height));
+   glVertex2f(XWindowToUklad(0), 0); glVertex2f(XWindowToUklad(Window.Width), 0);
   glEnd;
  end;
 
@@ -636,33 +625,35 @@ begin
   glLineStipple(10, $AAAA);
   glEnable(GL_LINE_STIPPLE);
   glBegin(GL_LINES);
-   glVertex2f(WSize/2, 0); glVertex2f(WSize/2, HSize);
-   glVertex2f(0, HSize/2); glVertex2f(WSIze, HSize/2);
+   glVertex2f(Window.Width/2, 0); glVertex2f(Window.Width/2, Window.Height);
+   glVertex2f(0, Window.Height/2); glVertex2f(Window.Width, Window.Height/2);
   glEnd;
   glDisable(GL_LINE_STIPPLE);
 
-  glRasterPos2f(WSize/2, HSize/2);
-  Font.Print(Format('%f, %f', [XWindowToUklad(WSize/2), YWindowToUklad(HSize/2)]));
+  SetWindowPos(Window.Width div 2, Window.Height div 2);
+  Font.Print(Format('%f, %f', [XWindowToUklad(Window.Width/2), YWindowToUklad(Window.Height/2)]));
  end;
 
  if BoolOptions[boMap] then
  begin
   glLoadIdentity;
   glColorv(ColorScheme^[ciCrosshair]^);
-  glTranslatef(XPixels(10), YPixels(5), 0);
 
-  glRasterPos2i(0, 0);
-  Font.Print(Format('Scale %f, %f. Move %f, %f. Rotation %f. %d graphs.',
-    [ScaleX, ScaleY, MoveX, MoveY, Rotate, Graphs.Count]));
+  TextY := 10;
+  SetWindowPos(10, TextY);
+  Font.Print(Format('Scale %f, %f. Move %f, %f. %d graphs.',
+    [ScaleX, ScaleY, MoveX, MoveY, Graphs.Count]));
 
-  h := YPixels(Font.RowHeight);
   for i := 0 to Graphs.Count-1 do
   begin
    glColorv(Graphs[i].Color);
-   glTranslatef(0, h, 0);
+   TextY += Font.RowHeight + 2;
 
-   glBegin(GL_LINES); glVertex2f(0, h/2); glVertex2f(5, h/2); glEnd;
-   glRasterPos2f(6.5, 0);
+   glBegin(GL_LINES);
+     glVertex2f(5 , TextY + Font.RowHeight div 2);
+     glVertex2f(15, TextY + Font.RowHeight div 2);
+   glEnd;
+   SetWindowPos(20, TextY);
    if Graphs[i].Visible then
     Font.Print(Format('%d - %s', [i, Graphs[i].Name])) else
     Font.Print(Format('{%d - %s}', [i, Graphs[i].Name]));
@@ -696,8 +687,8 @@ procedure Update(Window: TCastleWindowBase);
       Innymi slowy, "tak naprawde" wykonujemy kiepskie skalowanie wzgledem srodka
       ukladu wspolrzednych (0, 0) ale potem odpowiednio sie przesuwamy tak aby wrocic
       tak gdzie bylismy !. }
-    MoveX:=(MoveX-WSize/2)*Multiplier + WSize/2;
-    MoveY:=(MoveY-HSize/2)*Multiplier + HSize/2;
+    MoveX:=(MoveX-Window.Width/2 )*Multiplier + Window.Width /2;
+    MoveY:=(MoveY-Window.Height/2)*Multiplier + Window.Height/2;
 
     Window.PostRedisplay;
   end;
@@ -710,7 +701,7 @@ procedure Update(Window: TCastleWindowBase);
 
     ScaleX *= Multiplier;
 
-    MoveX := (MoveX-WSize/2) * Multiplier + WSize/2;
+    MoveX := (MoveX-Window.Width/2) * Multiplier + Window.Width/2;
 
     Window.PostRedisplay;
   end;
@@ -723,7 +714,7 @@ procedure Update(Window: TCastleWindowBase);
 
     ScaleY *= Multiplier;
 
-    MoveY := (MoveY-HSize/2) * Multiplier + HSize/2;
+    MoveY := (MoveY-Window.Height/2) * Multiplier + Window.Height/2;
 
     Window.PostRedisplay;
   end;
@@ -779,18 +770,7 @@ begin
       MultiplyGLScaleY(1 / 1.1) else
       MultiplyGLScaleY(1.1);
   end;
-
-  if Pressed[K_PageUp] then AddGL(rotate, -1);
-  if Pressed[K_PageDown] then AddGL(rotate, +1);
  end;
-end;
-
-procedure Resize(Window: TCastleWindowBase);
-begin
- glViewport(0, 0, Window.Width, Window.Height);
- WSize := 50;
- HSize := WSize * Window.Height/Window.Width;
- OrthoProjection(0, WSize, 0, HSize);
 end;
 
 procedure MouseMove(Window: TCastleWindowBase; newX, newY: integer);
@@ -799,8 +779,8 @@ begin
  begin
   { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
     ostatniego MouseMove/Down }
-  MoveX := MoveX + XPixels(newX-Window.MouseX);
-  MoveY := MoveY - YPixels(newY-Window.MouseY); { y jest mierzone w przeciwna strone, stad minus }
+  MoveX := MoveX + (newX-Window.MouseX);
+  MoveY := MoveY - (newY-Window.MouseY); { y jest mierzone w przeciwna strone, stad minus }
   Window.PostRedisplay;
  end;
 end;
@@ -1010,7 +990,6 @@ begin
          '  +/-         : scale',
          '  x/X         : scale only horizontally',
          '  y/Y         : scale only vertically',
-         '  PgUp/PgDown : rotate',
          'Hold down Ctrl to make these keys work 10x faster. ',
          '',
          'You can also move view by dragging while holding left mouse button.'],
@@ -1131,7 +1110,7 @@ begin
 
       { basic glw callbacks }
       Window.OnUpdate := @Update;
-      Window.OnResize := @Resize;
+      Window.OnResize := @Resize2D;
       Window.OnOpen := @Open;
       Window.OnClose := @Close;
       Window.OnMouseMove := @MouseMove;
