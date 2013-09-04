@@ -288,7 +288,7 @@ const
 { inne zmienne globalne -------------------------------------------------- }
 
 var
-  Window: TCastleWindowDemo;
+  Window: TCastleWindowCustom;
 
   CustomSize: TGLfloat = 2.5;
 
@@ -1093,7 +1093,7 @@ end;
 begin
   OnGetApplicationName := @MyGetApplicationName;
 
-  Window := TCastleWindowDemo.Create(Application);
+  Window := TCastleWindowCustom.Create(Application);
 
   { initialize RecentMenu }
   RecentMenu := TWindowRecentFiles.Create(nil);
