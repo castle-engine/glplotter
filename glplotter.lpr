@@ -44,7 +44,8 @@ uses SysUtils, GL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
   CastleBitmapFont_BVSansMono_m16, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors, FGL, CastleGenericLists,
-  CastleConfig, CastleKeysMouse, CastleURIUtils;
+  CastleConfig, CastleKeysMouse, CastleURIUtils,
+  CastleControls, CastleControlsImages;
 
 {$define read_interface}
 {$define read_implementation}
@@ -1124,6 +1125,7 @@ begin
       Window.Caption := 'glplotter';
 
       MessagesTheme := MessagesTheme_TypicalGUI;
+      Theme.Window := Window_Gray;
 
       Window.Open;
 
