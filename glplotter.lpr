@@ -1125,7 +1125,7 @@ begin
       Window.Caption := 'glplotter';
 
       MessagesTheme := MessagesTheme_TypicalGUI;
-      Theme.Window := Window_Gray;
+      Theme.Window := WindowGray;
 
       Window.Open;
 
