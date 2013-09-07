@@ -422,7 +422,7 @@ begin
     on E: Exception do
     begin
       MessageOK(Window, Format('Error when opening graph from file "%s": %s',
-        [URL, E.Message]), taLeft);
+        [URL, E.Message]));
       Exit;
     end;
   end;
@@ -448,14 +448,14 @@ begin
     begin
       MessageOK(Window, Format(
         'Error when parsing function expression at position %d: %s',
-        [E.LexerTextPos, E.Message]), taLeft);
+        [E.LexerTextPos, E.Message]));
       Exit;
     end;
     on E: ECasScriptError do
     begin
       MessageOK(Window, Format(
         'Error %s in function expression: %s',
-        [E.ClassName, E.Message]), taLeft);
+        [E.ClassName, E.Message]));
       Exit;
     end;
   end;
@@ -928,10 +928,10 @@ procedure MenuClick(Sender: TCastleWindowBase; Item: TMenuItem);
       MessageInputQuery(Window,
         'Function expression :' + nl + nl +
         '(where x is the function argument, e.g. "x * 2")',
-        Expression, taLeft) and
-      MessageInputQuery(Window, 'First X value :' + SYouCan, X1, taLeft) and
-      MessageInputQuery(Window, 'Last X value :'  + SYouCan, X2, taLeft) and
-      MessageInputQuery(Window, 'X value step :'  + SYouCan, XStep, taLeft);
+        Expression) and
+      MessageInputQuery(Window, 'First X value :' + SYouCan, X1) and
+      MessageInputQuery(Window, 'Last X value :'  + SYouCan, X2) and
+      MessageInputQuery(Window, 'X value step :'  + SYouCan, XStep);
 
     LastInputX1 := X1;
     LastInputX2 := X2;
@@ -993,8 +993,7 @@ begin
          '  y/Y         : scale only vertically',
          'Hold down Ctrl to make these keys work 10x faster. ',
          '',
-         'You can also move view by dragging while holding left mouse button.'],
-         taLeft);
+         'You can also move view by dragging while holding left mouse button.']);
   6:  MessageOK(Window,
         [ 'glplotter: plotting graphs, of functions and others.',
           'Version ' + Version,
@@ -1002,7 +1001,7 @@ begin
           '',
           '[http://castle-engine.sourceforge.net/glplotter_and_gen_function.php]',
           '',
-          'Compiled with ' + SCompilerDescription +'.' ], taLeft);
+          'Compiled with ' + SCompilerDescription +'.' ]);
   10: Window.Close;
 
   21: HomeState;
