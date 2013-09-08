@@ -1123,8 +1123,8 @@ begin
       { other glw options }
       Window.Caption := 'glplotter';
 
-      Theme.MessageInputTextColor := Vector3Byte(0, 100, 0);
-      Theme.MessageTextColor := Vector3Byte(0, 0, 0);
+      Theme.MessageInputTextColor := Vector4Byte(0, 100, 0, 255);
+      Theme.MessageTextColor := Black;
       Theme.Images[tiWindow] := WindowGray;
 
       Window.Open;
