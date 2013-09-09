@@ -62,7 +62,7 @@ type
     ciGridPi,     ciNumScalePi,     ciNumbersPi,
     ciGridCustom, ciNumScaleCustom, ciNumbersCustom,
     ciGraph1, ciGraph2, ciGraph3);
-  TColorScheme = array[TColorItem]of PVector3f;
+  TColorScheme = array [TColorItem] of TCastleColor;
   PColorScheme = ^TColorScheme;
 
 const
@@ -70,18 +70,38 @@ const
   IloscGraphKol = Ord(ciGraphMax)-Ord(ciGraph1)+1;
 
   { zestawy kolorow : }
-  ColorSchemeDark: TColorScheme=
-  ( @Black3Single, @LightBlue3Single, @White3Single,
-    @DarkGreen3Single, @DarkGreen3Single, @Green3Single,
-    @DarkBrown3Single, @DarkBrown3Single, @Brown3Single,
-    @Blue3Single, @Blue3Single, @LightBlue3Single,
-    @Yellow3Single, @Red3Single, @LightGray3Single);
-  ColorSchemeLight: TColorScheme=
-  ( @White3Single, @Blue3Single, @Green3Single,
-    @Yellow3Single, @Yellow3Single, @Green3Single,
-    @Orange3Single, @Orange3Single, @Brown3Single,
-    @Orange3Single, @Orange3Single, @Orange3Single,
-    @Black3Single, @Green3Single, @LightGray3Single);
+  ColorSchemeDark: TColorScheme =
+  ( (  0,   0,   0, 255),
+    ( 85,  85, 255, 255),
+    (255, 255, 255, 255),
+    (  0,  85,   0, 255),
+    (  0,  85,   0, 255),
+    (  0, 153,   0, 255),
+    (153,  42,   0, 255),
+    (153,  42,   0, 255),
+    (153,  85,   0, 255),
+    (0  ,   0, 153, 255),
+    (0  ,   0, 153, 255),
+    ( 85,  85, 255, 255),
+    (255, 255,  85, 255),
+    (255,   0,   0, 255),
+    (153, 153, 153, 255));
+  ColorSchemeLight: TColorScheme =
+  ( (255, 255, 255, 255),
+    (  0,   0, 153, 255),
+    (  0, 153,   0, 255),
+    (255, 255,  85, 255),
+    (255, 255,  85, 255),
+    (  0, 153,   0, 255),
+    (255, 128,   0, 255),
+    (255, 128,   0, 255),
+    (153, 85,    0, 255),
+    (255, 128,   0, 255),
+    (255, 128,   0, 255),
+    (255, 128,   0, 255),
+    (  0,   0,   0, 255),
+    (  0, 153,   0, 255),
+    (153, 153, 153, 255));
 
 var
   ColorScheme: PColorScheme = @ColorSchemeDark;
@@ -106,7 +126,7 @@ type
   public
     MenuItem: TMenuItemChecked;
     Points: TXYList;
-    Color: TVector3f;
+    Color: TCastleColor;
     Name: string;
     property Visible: boolean read FVisible write SetVisible;
 
@@ -132,9 +152,9 @@ procedure TGraph.CreateCommon(AColorNumber: Integer);
 begin
   { calculate Color }
   if AColorNumber < IloscGraphKol then
-    Color := ColorScheme^[TColorItem(Ord(ciGraph1) + AColorNumber)]^ else
+    Color := ColorScheme^[TColorItem(Ord(ciGraph1) + AColorNumber)] else
   repeat
-    Color := Vector3Single(Random, Random, Random);
+    Color := Vector4Byte(Random(256), Random(256), Random(256), 255);
     { Don't allow too dark colors, as they are not visible... }
   until GrayscaleValue(Color) >= 0.2;
 
@@ -375,9 +395,9 @@ begin result := UkladX * ScaleX + MoveX end;
 function YUkladToWindow(UkladY: TGLfloat): TGLfloat;
 begin result := UkladY * ScaleY + MoveY end;
 
-procedure SetWindowPosUklad(const X, Y: Extended);
+function WindowPosUklad(const X, Y: Extended): TVector2Integer;
 begin
-  SetWindowPos(Round(XUkladToWindow(X)), Round(YUkladToWindow(Y)));
+  Result := Vector2Integer(Round(XUkladToWindow(X)), Round(YUkladToWindow(Y)));
 end;
 
 var
@@ -470,7 +490,7 @@ procedure Draw(Window: TCastleWindowBase);
   procedure ShowGridNumScale(
     const krok: extended; const LiczbowyString: string;
     showGrid, showNumScale, showNumbers: boolean;
-    const gridKol, NumScaleKol, NumbersKol: TVector3f);
+    const gridKol, NumScaleKol, NumbersKol: TCastleColor);
   { ShowGridNumScale draws grid, numbers scale and numbers.
     Odpowiednie parametry showXxx okreslaja co dokladnie narysowac -
     dowolna kombinacja trzech powyzszych elementow moze byc wiec narysowana.
@@ -532,17 +552,12 @@ procedure Draw(Window: TCastleWindowBase);
 
    if ShowNumbers then
    begin
-    glColorv(NumbersKol);
-    for i := minx to maxx do
-    begin
-     SetWindowPosUklad(i*krok, 0);
-     Font.Print(Format(LiczbowyString, [i, i*krok]));
-    end;
-    for i := miny to maxy do
-    begin
-     SetWindowPosUklad(0, i*krok);
-     Font.Print(Format(LiczbowyString, [i, i*krok]));
-    end;
+     for i := minx to maxx do
+       Font.Print(WindowPosUklad(i*krok, 0), NumbersKol,
+         Format(LiczbowyString, [i, i*krok]));
+     for i := miny to maxy do
+       Font.Print(WindowPosUklad(0, i*krok), NumbersKol,
+         Format(LiczbowyString, [i, i*krok]));
    end;
   end;
 
@@ -577,12 +592,10 @@ procedure Draw(Window: TCastleWindowBase);
 
     if BoolOptions[boPointsCoords] then
     begin
-     for i := 0 to Points.Count-1 do
-     if not points.L[i].break then
-     begin
-      SetWindowPosUklad(points.L[i].x, points.L[i].y);
-      Font.Print(Format('(%f,%f)', [points.L[i].x, points.L[i].y]));
-     end;
+      for i := 0 to Points.Count-1 do
+        if not points.L[i].break then
+          Font.Print(WindowPosUklad(points.L[i].x, points.L[i].y), Color,
+            Format('(%f,%f)', [points.L[i].x, points.L[i].y]));
     end;
    end;
   end;
@@ -590,6 +603,7 @@ procedure Draw(Window: TCastleWindowBase);
 var
   i, j: integer;
   TextY: integer;
+  S: string;
 begin
  glClear(GL_COLOR_BUFFER_BIT);
  glLoadIdentity;
@@ -599,17 +613,17 @@ begin
 
  ShowGridNumScale(1, '%d',
    BoolOptions[boGrid1],   BoolOptions[boNumScale1],   BoolOptions[boNumbers1],
-   ColorScheme^[ciGrid1]^,  ColorScheme^[ciNumScale1]^,  ColorScheme^[ciNumbers1]^);
+   ColorScheme^[ciGrid1],  ColorScheme^[ciNumScale1],  ColorScheme^[ciNumbers1]);
  ShowGridNumScale(Pi, '%d*Pi',
    BoolOptions[boGridPi],  BoolOptions[boNumScalePi],  BoolOptions[boNumbersPi],
-   ColorScheme^[ciGridPi]^, ColorScheme^[ciNumScalePi]^, ColorScheme^[ciNumbersPi]^);
+   ColorScheme^[ciGridPi], ColorScheme^[ciNumScalePi], ColorScheme^[ciNumbersPi]);
  ShowGridNumScale(CustomSize, '%1:f',
    BoolOptions[boGridCustom],  BoolOptions[boNumScaleCustom],  BoolOptions[boNumbersCustom],
-   ColorScheme^[ciGridCustom]^, ColorScheme^[ciNumScaleCustom]^, ColorScheme^[ciNumbersCustom]^);
+   ColorScheme^[ciGridCustom], ColorScheme^[ciNumScaleCustom], ColorScheme^[ciNumbersCustom]);
 
  if BoolOptions[boMainXYLines] then
  begin
-  glColorv(ColorScheme^[ciMainXYLines]^);
+  glColorv(ColorScheme^[ciMainXYLines]);
   glBegin(GL_LINES);
    glVertex2f(0, YWindowToUklad(0)); glVertex2f(0, YWindowToUklad(Window.Height));
    glVertex2f(XWindowToUklad(0), 0); glVertex2f(XWindowToUklad(Window.Width), 0);
@@ -621,7 +635,7 @@ begin
  if BoolOptions[boCrosshair] then
  begin
   glLoadIdentity;
-  glColorv(ColorScheme^[ciCrosshair]^);
+  glColorv(ColorScheme^[ciCrosshair]);
 
   glLineStipple(10, $AAAA);
   glEnable(GL_LINE_STIPPLE);
@@ -631,18 +645,18 @@ begin
   glEnd;
   glDisable(GL_LINE_STIPPLE);
 
-  SetWindowPos(Window.Width div 2, Window.Height div 2);
-  Font.Print(Format('%f, %f', [XWindowToUklad(Window.Width/2), YWindowToUklad(Window.Height/2)]));
+  Font.Print(Window.Width div 2, Window.Height div 2,
+    ColorScheme^[ciCrosshair],
+    Format('%f, %f', [XWindowToUklad(Window.Width/2), YWindowToUklad(Window.Height/2)]));
  end;
 
  if BoolOptions[boMap] then
  begin
   glLoadIdentity;
-  glColorv(ColorScheme^[ciCrosshair]^);
 
   TextY := 10;
-  SetWindowPos(10, TextY);
-  Font.Print(Format('Scale %f, %f. Move %f, %f. %d graphs.',
+  Font.Print(10, TextY, ColorScheme^[ciCrosshair],
+    Format('Scale %f, %f. Move %f, %f. %d graphs.',
     [ScaleX, ScaleY, MoveX, MoveY, Graphs.Count]));
 
   for i := 0 to Graphs.Count-1 do
@@ -654,10 +668,10 @@ begin
      glVertex2f(5 , TextY + Font.RowHeight div 2);
      glVertex2f(15, TextY + Font.RowHeight div 2);
    glEnd;
-   SetWindowPos(20, TextY);
-   if Graphs[i].Visible then
-    Font.Print(Format('%d - %s', [i, Graphs[i].Name])) else
-    Font.Print(Format('{%d - %s}', [i, Graphs[i].Name]));
+   S := Format('%d - %s', [i, Graphs[i].Name]);
+   if not Graphs[i].Visible then
+     S := '{' + S + '}';
+   Font.Print(20, TextY, Graphs[i].Color, S);
   end;
  end;
 end;
@@ -788,7 +802,7 @@ end;
 
 procedure Open(Window: TCastleWindowBase);
 begin
- glClearColorv(ColorScheme^[ciBG]^, 1);
+ glClearColorv(ColorScheme^[ciBG]);
  Font := TGLBitmapFont.Create(BitmapFont_BVSansMono_m16);
 end;
 
