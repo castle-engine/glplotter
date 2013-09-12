@@ -605,7 +605,7 @@ var
   TextY: integer;
   S: string;
 begin
- glClear(GL_COLOR_BUFFER_BIT);
+ GLClear([cbColor], ColorScheme^[ciBG]);
  glLoadIdentity;
 
  glTranslatef(MoveX, MoveY, 0);
@@ -802,7 +802,6 @@ end;
 
 procedure Open(Window: TCastleWindowBase);
 begin
- glClearColorv(ColorScheme^[ciBG]);
  Font := TGLBitmapFont.Create(BitmapFont_BVSansMono_m16);
 end;
 
