@@ -37,9 +37,10 @@ program glplotter;
   zadziala zgodnie z oczekiwaniami.
 }
 
+{$I castleconf.inc}
 {$apptype GUI}
 
-uses SysUtils, GL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
+uses SysUtils, CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
   CastleClassUtils, CastleMessages, CastleGLBitmapFonts,
   CastleBitmapFont_BVSansMono_m16, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
