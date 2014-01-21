@@ -41,12 +41,10 @@ program glplotter;
 {$apptype GUI}
 
 uses SysUtils, CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
-  CastleClassUtils, CastleMessages, CastleGLBitmapFonts,
-  CastleBitmapFont_BVSansMono_m16, CastleParameters, CastleVectors,
+  CastleClassUtils, CastleMessages, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors, FGL, CastleGenericLists,
-  CastleConfig, CastleKeysMouse, CastleURIUtils,
-  CastleControls, CastleControlsImages;
+  CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls, CastleControlsImages;
 
 {$define read_interface}
 {$define read_implementation}
@@ -319,8 +317,6 @@ var
   MoveX, MoveY: TGLfloat;
   ScaleX, ScaleY: TGLfloat;
 
-  Font: TGLBitmapFont;
-
 { global funcs ---------------------------------------------------------- }
 
 { Reset view properties to default, such that all Graphs are visible. }
@@ -554,10 +550,10 @@ procedure Draw(Window: TCastleWindowBase);
    if ShowNumbers then
    begin
      for i := minx to maxx do
-       Font.Print(WindowPosUklad(i*krok, 0), NumbersKol,
+       UIFont.Print(WindowPosUklad(i*krok, 0), NumbersKol,
          Format(LiczbowyString, [i, i*krok]));
      for i := miny to maxy do
-       Font.Print(WindowPosUklad(0, i*krok), NumbersKol,
+       UIFont.Print(WindowPosUklad(0, i*krok), NumbersKol,
          Format(LiczbowyString, [i, i*krok]));
    end;
   end;
@@ -595,7 +591,7 @@ procedure Draw(Window: TCastleWindowBase);
     begin
       for i := 0 to Points.Count-1 do
         if not points.L[i].break then
-          Font.Print(WindowPosUklad(points.L[i].x, points.L[i].y), Color,
+          UIFont.Print(WindowPosUklad(points.L[i].x, points.L[i].y), Color,
             Format('(%f,%f)', [points.L[i].x, points.L[i].y]));
     end;
    end;
@@ -646,7 +642,7 @@ begin
   glEnd;
   glDisable(GL_LINE_STIPPLE);
 
-  Font.Print(Window.Width div 2, Window.Height div 2,
+  UIFont.Print(Window.Width div 2, Window.Height div 2,
     ColorScheme^[ciCrosshair],
     Format('%f, %f', [XWindowToUklad(Window.Width/2), YWindowToUklad(Window.Height/2)]));
  end;
@@ -656,23 +652,23 @@ begin
   glLoadIdentity;
 
   TextY := 10;
-  Font.Print(10, TextY, ColorScheme^[ciCrosshair],
+  UIFont.Print(10, TextY, ColorScheme^[ciCrosshair],
     Format('Scale %f, %f. Move %f, %f. %d graphs.',
     [ScaleX, ScaleY, MoveX, MoveY, Graphs.Count]));
 
   for i := 0 to Graphs.Count-1 do
   begin
    glColorv(Graphs[i].Color);
-   TextY += Font.RowHeight + 2;
+   TextY += UIFont.RowHeight + 2;
 
    glBegin(GL_LINES);
-     glVertex2f(5 , TextY + Font.RowHeight div 2);
-     glVertex2f(15, TextY + Font.RowHeight div 2);
+     glVertex2f(5 , TextY + UIFont.RowHeight div 2);
+     glVertex2f(15, TextY + UIFont.RowHeight div 2);
    glEnd;
    S := Format('%d - %s', [i, Graphs[i].Name]);
    if not Graphs[i].Visible then
      S := '{' + S + '}';
-   Font.Print(20, TextY, Graphs[i].Color, S);
+   UIFont.Print(20, TextY, Graphs[i].Color, S);
   end;
  end;
 end;
@@ -799,16 +795,6 @@ begin
   MoveY := MoveY - (newY-Window.MouseY); { y jest mierzone w przeciwna strone, stad minus }
   Window.PostRedisplay;
  end;
-end;
-
-procedure Open(Window: TCastleWindowBase);
-begin
- Font := TGLBitmapFont.Create(BitmapFont_BVSansMono_m16);
-end;
-
-procedure Close(Window: TCastleWindowBase);
-begin
- FreeAndNil(Font);
 end;
 
 { menu-related things -------------------------------------------------------- }
@@ -1125,8 +1111,6 @@ begin
       { basic glw callbacks }
       Window.OnUpdate := @Update;
       Window.OnResize := @Resize2D;
-      Window.OnOpen := @Open;
-      Window.OnClose := @Close;
       Window.OnMouseMove := @MouseMove;
       Window.OnDraw := @Draw;
 
