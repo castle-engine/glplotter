@@ -312,7 +312,7 @@ var
 
   CustomSize: TGLfloat = 2.5;
 
-  { ponizej rzeczy ktore sa bezposrednio wykorzystywane w DrawGL.
+  { ponizej rzeczy ktore sa bezposrednio wykorzystywane w Render.
     Ich wartosci poczatkowe sa ustalane w HomeState. }
   MoveX, MoveY: TGLfloat;
   ScaleX, ScaleY: TGLfloat;
@@ -480,9 +480,9 @@ begin
   Graphs.Add(G);
 end;
 
-{ registered glw callbacks -------------------------------------------------- }
+{ registered window callbacks -------------------------------------------------- }
 
-procedure Draw(Window: TCastleWindowBase);
+procedure Render(Window: TCastleWindowBase);
 
   procedure ShowGridNumScale(
     const krok: extended; const LiczbowyString: string;
@@ -1112,7 +1112,7 @@ begin
       Window.OnUpdate := @Update;
       Window.OnResize := @Resize2D;
       Window.OnMouseMove := @MouseMove;
-      Window.OnDraw := @Draw;
+      Window.OnRender := @Render;
 
       { setup menu }
       Window.MainMenu := GetMainMenu;
