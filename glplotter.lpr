@@ -482,7 +482,7 @@ end;
 
 { registered window callbacks -------------------------------------------------- }
 
-procedure Render(Window: TCastleWindowBase);
+procedure Render(Container: TUIContainer);
 
   procedure ShowGridNumScale(
     const krok: extended; const LiczbowyString: string;
@@ -676,7 +676,7 @@ end;
 var
   UpdateFirst: boolean = true;
 
-procedure Update(Window: TCastleWindowBase);
+procedure Update(Container: TUIContainer);
 
   function SpeedFactor: TGLfloat;
   begin
@@ -785,7 +785,7 @@ begin
  end;
 end;
 
-procedure MouseMove(Window: TCastleWindowBase; newX, newY: integer);
+procedure MouseMove(Container: TUIContainer; newX, newY: integer);
 begin
  if mbLeft in Window.mousePressed then
  begin
@@ -890,7 +890,7 @@ var
   LastInputX2: string = '1';
   LastInputXStep: string = '0.1';
 
-procedure MenuClick(Sender: TCastleWindowBase; Item: TMenuItem);
+procedure MenuClick(Container: TUIContainer; Item: TMenuItem);
 
   procedure SetVisibleAll(Value: boolean);
   var i: Integer;
@@ -1067,7 +1067,7 @@ begin
           '  --custom-size / -c SIZE' +nl+
           '                        Set size of custom grid' +nl+
           nl+
-          TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
+          TCastleWindowCustom.ParseParametersHelp(StandardParseOptions, true) +nl+
           nl+
           SCastleEngineProgramHelpSuffix(DisplayApplicationName, Version, true));
         ProgramBreak;
