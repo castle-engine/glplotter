@@ -373,7 +373,7 @@ begin
   MoveY := Window.Height/2 - MiddleY * ScaleY;
  end;
 
- Window.PostRedisplay;
+ Window.Invalidate;
 end;
 
 { funkcje XYWindowToUklad pobieraja pozycje we wspolrzednej okna OpenGL'a
@@ -702,7 +702,7 @@ procedure Update(Container: TUIContainer);
     MoveX:=(MoveX-Window.Width/2 )*Multiplier + Window.Width /2;
     MoveY:=(MoveY-Window.Height/2)*Multiplier + Window.Height/2;
 
-    Window.PostRedisplay;
+    Window.Invalidate;
   end;
 
   procedure MultiplyGLScaleX(Multiplier: TGLfloat);
@@ -715,7 +715,7 @@ procedure Update(Container: TUIContainer);
 
     MoveX := (MoveX-Window.Width/2) * Multiplier + Window.Width/2;
 
-    Window.PostRedisplay;
+    Window.Invalidate;
   end;
 
   procedure MultiplyGLScaleY(Multiplier: TGLfloat);
@@ -728,13 +728,13 @@ procedure Update(Container: TUIContainer);
 
     MoveY := (MoveY-Window.Height/2) * Multiplier + Window.Height/2;
 
-    Window.PostRedisplay;
+    Window.Invalidate;
   end;
 
   procedure AddGL(var Value: TGLfloat; const Change: TGLfloat);
   begin
    Value += Change * SpeedFactor;
-   Window.PostRedisplay;
+   Window.Invalidate;
   end;
 
   { Interpretuje wszystkie pozostale ParStr(1) .. ParStr(ParCount) jako
@@ -793,7 +793,7 @@ begin
     ostatniego MouseMove/Down }
   MoveX := MoveX + (newX-Window.MouseX);
   MoveY := MoveY - (newY-Window.MouseY); { y jest mierzone w przeciwna strone, stad minus }
-  Window.PostRedisplay;
+  Window.Invalidate;
  end;
 end;
 
@@ -897,7 +897,7 @@ procedure MenuClick(Container: TUIContainer; Item: TMenuItem);
   begin
    for i := 0 to Graphs.Count - 1 do
     Graphs[i].Visible := Value;
-   Window.PostRedisplay;
+   Window.Invalidate;
   end;
 
   procedure OpenOrAddGraphFromFile(Open: boolean);
@@ -1028,11 +1028,11 @@ begin
   1000..2000:
     begin
      with Graphs[Item.IntData-1000] do Visible := not Visible;
-     Window.PostRedisplay;
+     Window.Invalidate;
     end;
   else Exit;
  end;
- Window.PostRedisplay;
+ Window.Invalidate;
 end;
 
 { params parsing ------------------------------------------------------------ }
