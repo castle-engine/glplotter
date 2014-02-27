@@ -785,14 +785,14 @@ begin
  end;
 end;
 
-procedure MouseMove(Container: TUIContainer; newX, newY: integer);
+procedure Motion(Container: TUIContainer; const Event: TInputMotion);
 begin
- if mbLeft in Window.mousePressed then
+ if mbLeft in Event.Pressed then
  begin
   { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
     ostatniego MouseMove/Down }
-  MoveX := MoveX + (newX-Window.MouseX);
-  MoveY := MoveY - (newY-Window.MouseY); { y jest mierzone w przeciwna strone, stad minus }
+  MoveX := MoveX + Event.Position[0] - Event.OldPosition[0];
+  MoveY := MoveY + Event.Position[1] - Event.OldPosition[1];
   Window.Invalidate;
  end;
 end;
@@ -1111,7 +1111,7 @@ begin
       { basic glw callbacks }
       Window.OnUpdate := @Update;
       Window.OnResize := @Resize2D;
-      Window.OnMouseMove := @MouseMove;
+      Window.OnMotion := @Motion;
       Window.OnRender := @Render;
 
       { setup menu }
