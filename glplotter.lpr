@@ -790,7 +790,7 @@ begin
  if mbLeft in Event.Pressed then
  begin
   { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
-    ostatniego MouseMove/Down }
+    ostatniego Motion/Down }
   MoveX := MoveX + Event.Position[0] - Event.OldPosition[0];
   MoveY := MoveY + Event.Position[1] - Event.OldPosition[1];
   Window.Invalidate;
