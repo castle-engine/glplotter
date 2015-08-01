@@ -16,4 +16,4 @@ make clean-window
 
 fpc -dRELEASE ${CASTLE_FPC_OPTIONS:-} @castle-fpc.cfg ../glplotter/glplotter.lpr
 
-fpc -dRELEASE ${CASTLE_FPC_OPTIONS:-} @castle-fpc.cfg ../gen_function/gen_function.lpr
+fpc -dRELEASE ${CASTLE_FPC_OPTIONS:-} @castle-fpc.cfg ../glplotter/gen_function.lpr
