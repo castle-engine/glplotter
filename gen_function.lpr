@@ -103,7 +103,7 @@ begin
           E.Message +nl+
           expr_str +nl+
           StringOfChar('.', E.LexerTextPos-1) + '^');
-        ProgramBreak(2);
+        ProgramBreak;
       end;
     end;
     try
