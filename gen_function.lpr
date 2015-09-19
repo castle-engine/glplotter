@@ -70,12 +70,12 @@ begin
       VersionOptionHelp +nl+
       nl+
       SCastleEngineProgramHelpSuffix(ApplicationName, Version, true));
-    ProgramBreak;
+    Halt;
   end else
   if Parameters.IsPresent(['-v', '--version']) then
   begin
     Writeln(Version);
-    ProgramBreak;
+    Halt;
   end;
 
   { parse options }
@@ -103,7 +103,7 @@ begin
           E.Message +nl+
           expr_str +nl+
           StringOfChar('.', E.LexerTextPos-1) + '^');
-        ProgramBreak;
+        Halt;
       end;
     end;
     try

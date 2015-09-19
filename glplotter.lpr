@@ -1070,14 +1070,14 @@ begin
           TCastleWindowCustom.ParseParametersHelp(StandardParseOptions, true) +nl+
           nl+
           SCastleEngineProgramHelpSuffix(DisplayApplicationName, Version, true));
-        ProgramBreak;
+        Halt;
       end;
     1:CustomSize := StrToFloat(Argument);
     2:ColorScheme := @ColorSchemeLight;
     3:ColorScheme := @ColorSchemeDark;
     4:begin
         WritelnStr(Version);
-        ProgramBreak;
+        Halt;
       end;
     else raise EInternalError.Create('OptionProc');
   end;
