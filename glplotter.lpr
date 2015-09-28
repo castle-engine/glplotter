@@ -1100,7 +1100,8 @@ begin
   try
     RecentMenu.OnOpenRecent := @THelper(nil).OpenRecent;
 
-    Config.Load;
+    UserConfig.Load;
+    RecentMenu.LoadFromConfig(UserConfig);
 
     Graphs := TGraphList.Create(true);
     try
@@ -1130,7 +1131,8 @@ begin
       Application.Run;
     finally FreeAndNil(Graphs) end;
 
-    Config.Save;
+    RecentMenu.SaveToConfig(UserConfig);
+    UserConfig.Save;
   finally
     FreeAndNil(RecentMenu);
   end;
