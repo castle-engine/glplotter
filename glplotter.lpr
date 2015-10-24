@@ -73,7 +73,7 @@ const
   ( (0.0 , 0.0 , 0.0 , 1.0),
     (0.33, 0.33, 1.0 , 1.0),
     (1.0 , 1.0 , 1.0 , 1.0),
-    (0.0 , 0.33, 0.0 , 1.0),
+    (0.0 , 0.11, 0.0 , 1.0),
     (0.0 , 0.33, 0.0 , 1.0),
     (0.0 , 0.66, 0.0 , 1.0),
     (0.66, 0.16, 0.0 , 1.0),
@@ -345,8 +345,8 @@ begin
     So we set default MoveXY (look at the middle) and ScaleXY. }
   MoveX := Window.Width/2;
   MoveY := Window.Height/2;
-  ScaleX := 1;
-  ScaleY := 1;
+  ScaleX := 100;
+  ScaleY := 100;
  end else
  begin
   SizeX := MaxX - MinX;
@@ -549,12 +549,14 @@ procedure Render(Container: TUIContainer);
 
    if ShowNumbers then
    begin
-     for i := minx to maxx do
-       UIFont.Print(WindowPosUklad(i*krok, 0), NumbersKol,
-         Format(LiczbowyString, [i, i*krok]));
-     for i := miny to maxy do
-       UIFont.Print(WindowPosUklad(0, i*krok), NumbersKol,
-         Format(LiczbowyString, [i, i*krok]));
+     glPushMatrix; // we need to push/pop matrix around, ShowGraph assumes it doesn't change
+       for i := minx to maxx do
+         UIFont.Print(WindowPosUklad(i*krok, 0), NumbersKol,
+           Format(LiczbowyString, [i, i*krok]));
+       for i := miny to maxy do
+         UIFont.Print(WindowPosUklad(0, i*krok), NumbersKol,
+           Format(LiczbowyString, [i, i*krok]));
+     glPopMatrix;
    end;
   end;
 
@@ -886,8 +888,8 @@ begin
 end;
 
 var
-  LastInputX1: string = '0';
-  LastInputX2: string = '1';
+  LastInputX1: string = '-100';
+  LastInputX2: string = '100';
   LastInputXStep: string = '0.1';
 
 procedure MenuClick(Container: TUIContainer; Item: TMenuItem);
