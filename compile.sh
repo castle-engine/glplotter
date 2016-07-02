@@ -1,19 +1,12 @@
 #! /bin/sh
 set -eu
 
-# This is automatically generated script that should compile
-# all programs in this archive. It simply calls FPC
-# with proper command-line options.
-#
-# We must do cd ../castle_game_engine/ (and call FPC from that directory)
-# because castle-fpc.cfg file is there and it contains paths relative
-# to that directory.
+if [ -d ../castle_game_engine/ ]; then
+  cd ../castle_game_engine/
+  # Force rebuilding CastleWindow unit with proper backend.
+  make --quiet clean-window
+  cd ../glplotter/
+fi
 
-cd ../castle_game_engine/
-
-# Force rebuilding CastleWindow unit with proper backend.
-make --quiet clean-window
-
-fpc -dRELEASE ${CASTLE_FPC_OPTIONS:-} @castle-fpc.cfg ../glplotter/glplotter.lpr
-
-fpc -dRELEASE ${CASTLE_FPC_OPTIONS:-} @castle-fpc.cfg ../glplotter/gen_function.lpr
+castle-engine compile
+castle-engine simple-compile ../glplotter/gen_function.lpr
