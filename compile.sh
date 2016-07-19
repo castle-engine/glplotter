@@ -8,5 +8,5 @@ if [ -d ../castle_game_engine/ ]; then
   cd ../glplotter/
 fi
 
-castle-engine compile
-castle-engine simple-compile ../glplotter/gen_function.lpr
+castle-engine compile ${CASTLE_ENGINE_TOOL_OPTIONS:-}
+castle-engine simple-compile ${CASTLE_ENGINE_TOOL_OPTIONS:-} ../glplotter/gen_function.lpr
