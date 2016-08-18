@@ -569,13 +569,13 @@ procedure Render(Container: TUIContainer);
     glColorv(Color);
     if BoolOptions[boOnlyPoints] then
     begin
-     glPointSize(3);
+     RenderContext.PointSize := 3;
      glBegin(GL_POINTS);
      for i := 0 to Points.Count-1 do
       if not points.L[i].break then
        glVertex2f(points.L[i].x, points.L[i].y);
      glEnd;
-     glPointSize(1);
+     RenderContext.PointSize := 1;
     end else
     begin
      glBegin(GL_LINE_STRIP);
@@ -604,7 +604,7 @@ var
   TextY: integer;
   S: string;
 begin
- GLClear([cbColor], ColorScheme^[ciBG]);
+ RenderContext.Clear([cbColor], ColorScheme^[ciBG]);
  glLoadIdentity;
 
  glTranslatef(MoveX, MoveY, 0);
