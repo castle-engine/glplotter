@@ -1,6 +1,6 @@
 { -*- compile-command: "castle-engine simple-compile gen_function.lpr" -*- }
 {
-  Copyright 2001-2016 Michalis Kamburelis.
+  Copyright 2001-2017 Michalis Kamburelis.
 
   This file is part of "gen_function".
 
