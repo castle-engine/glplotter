@@ -40,11 +40,13 @@ program glplotter;
 {$I castleconf.inc}
 {$apptype GUI}
 
-uses SysUtils, CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
+uses SysUtils, Generics.Collections,
+  CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
   CastleClassUtils, CastleMessages, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
-  CastleWindowRecentFiles, CastleGLImages, CastleColors, FGL, CastleGenericLists,
-  CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls, CastleControlsImages;
+  CastleWindowRecentFiles, CastleGLImages, CastleColors,
+  CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls,
+  CastleControlsImages;
 
 {$define read_interface}
 {$define read_implementation}
@@ -114,7 +116,7 @@ type
   end;
   PXY = ^TXY;
 
-  TXYList = specialize TGenericStructList<TXY>;
+  TXYList = specialize TStructList<TXY>;
 
 type
   TGraph = class
@@ -266,7 +268,7 @@ begin
 end;
 
 type
-  TGraphList = specialize TFPGObjectList<TGraph>;
+  TGraphList = specialize TObjectList<TGraph>;
 
 var Graphs: TGraphList;
 
