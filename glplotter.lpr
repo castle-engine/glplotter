@@ -46,7 +46,7 @@ uses SysUtils, Generics.Collections,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors,
   CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls,
-  CastleControlsImages;
+  CastleControlsImages, CastleDownload;
 
 {$define read_interface}
 {$define read_implementation}
@@ -244,17 +244,22 @@ constructor TGraph.CreateFromFile(const URL: string; AColorNumber: Integer);
 var
   Reader: TTextReader;
 begin
- inherited Create;
- CreateCommon(AColorNumber);
+  inherited Create;
+  CreateCommon(AColorNumber);
 
- if URL = '-' then
-  CreateFromReader(StdInReader, 'stdin') else
- begin
-  Reader := TTextReader.Create(URL);
-  try
-   CreateFromReader(Reader, URL);
-  finally FreeAndNil(Reader) end;
- end;
+  if URL = '-' then
+  begin
+    Reader := TTextReader.Create(StdInStream, false);
+    try
+      CreateFromReader(Reader, 'stdin');
+    finally FreeAndNil(Reader) end;
+  end else
+  begin
+    Reader := TTextReader.Create(URL);
+    try
+      CreateFromReader(Reader, URL);
+    finally FreeAndNil(Reader) end;
+  end;
 end;
 
 destructor TGraph.Destroy;
