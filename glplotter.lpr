@@ -40,8 +40,8 @@ program glplotter;
 {$I castleconf.inc}
 {$apptype GUI}
 
-uses SysUtils, Generics.Collections,
-  CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Math, Classes,
+uses SysUtils, Generics.Collections, Math,
+  CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Classes,
   CastleClassUtils, CastleMessages, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors,
@@ -341,10 +341,10 @@ begin
  for i := 0 to Graphs.Count-1 do
   for j := 0 to Graphs[i].Points.Count-1 do
   begin
-   MinX := CastleUtils.Min(MinX, Graphs[i].Points.L[j].x);
-   MinY := CastleUtils.Min(MinY, Graphs[i].Points.L[j].y);
-   MaxX := CastleUtils.Max(MaxX, Graphs[i].Points.L[j].x);
-   MaxY := CastleUtils.Max(MaxY, Graphs[i].Points.L[j].y);
+   MinX := Min(MinX, Graphs[i].Points.L[j].x);
+   MinY := Min(MinY, Graphs[i].Points.L[j].y);
+   MaxX := Max(MaxX, Graphs[i].Points.L[j].x);
+   MaxY := Max(MaxY, Graphs[i].Points.L[j].y);
   end;
 
  if MinX = MaxFloat then
@@ -368,7 +368,7 @@ begin
 
     By default we set ScaleX and ScaleY to be equal, as this is most
     natural for user. }
-  ScaleX := CastleUtils.Max(CastleUtils.Min(Window.Width / SizeX, Window.Height / SizeY), 0.01);
+  ScaleX := Max(Min(Window.Width / SizeX, Window.Height / SizeY), 0.01);
   ScaleY := ScaleX;
 
   MiddleX := (MinX + MaxX) / 2;
