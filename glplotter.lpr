@@ -691,7 +691,7 @@ procedure Update(Container: TUIContainer);
 
   function SpeedFactor: TGLfloat;
   begin
-   Result := Window.Fps.UpdateSecondsPassed * 50; { to make everything time-based }
+   Result := Window.Fps.SecondsPassed * 50; { to make everything time-based }
    if Window.Pressed[K_Ctrl] then Result *= 10;
   end;
 
@@ -1138,7 +1138,7 @@ begin
       Theme.Images[tiWindow] := WindowGray;
 
       Window.Open;
-
+      GLFeatures.EnableFixedFunction := true;
       Application.Run;
     finally FreeAndNil(Graphs) end;
 
