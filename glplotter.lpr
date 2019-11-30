@@ -22,6 +22,8 @@
 
 program glplotter;
 
+{$warning TODO: THIS APPLICATION USES DIRECT OPENGL RENDERING, AND IN FIXED-FUNCTION PIPELINE. IT IS NO LONGER SUPPORTED BY LATEST CGE.}
+
 { TODO:
   - format pliku: kolor= i specyfikacja koloru wykresu
   - podawanie wlasnego kolor schema parametrami (albo plik ini ?)
@@ -317,14 +319,14 @@ const
 { inne zmienne globalne -------------------------------------------------- }
 
 var
-  Window: TCastleWindowCustom;
+  Window: TCastleWindowBase;
 
-  CustomSize: TGLfloat = 2.5;
+  CustomSize: Single = 2.5;
 
   { ponizej rzeczy ktore sa bezposrednio wykorzystywane w Render.
     Ich wartosci poczatkowe sa ustalane w HomeState. }
-  MoveX, MoveY: TGLfloat;
-  ScaleX, ScaleY: TGLfloat;
+  MoveX, MoveY: Single;
+  ScaleX, ScaleY: Single;
 
 { global funcs ---------------------------------------------------------- }
 
@@ -389,16 +391,16 @@ end;
   (czyli 0..Window.Width lub Window.Height)
   i zwracaja jaka jest pozycja punktu na wykresie
   w tym miejscu okna. }
-function XWindowToUklad(WindowX: TGLfloat): TGLfloat;
+function XWindowToUklad(WindowX: Single): Single;
 begin result := (WindowX - MoveX) / ScaleX end;
 
-function YWindowToUklad(WindowY: TGLfloat): TGLfloat;
+function YWindowToUklad(WindowY: Single): Single;
 begin result := (WindowY - MoveY) / ScaleY end;
 
-function XUkladToWindow(UkladX: TGLfloat): TGLfloat;
+function XUkladToWindow(UkladX: Single): Single;
 begin result := UkladX * ScaleX + MoveX end;
 
-function YUkladToWindow(UkladY: TGLfloat): TGLfloat;
+function YUkladToWindow(UkladY: Single): Single;
 begin result := UkladY * ScaleY + MoveY end;
 
 function WindowPosUklad(const X, Y: Extended): TVector2Integer;
@@ -610,7 +612,7 @@ procedure Render(Container: TUIContainer);
 
 var
   i, j: integer;
-  TextY: integer;
+  TextY: Single;
   S: string;
 begin
  RenderContext.Clear([cbColor], ColorScheme^[ciBG]);
@@ -673,8 +675,8 @@ begin
    TextY += UIFont.RowHeight + 2;
 
    glBegin(GL_LINES);
-     glVertex2f(5 , TextY + UIFont.RowHeight div 2);
-     glVertex2f(15, TextY + UIFont.RowHeight div 2);
+     glVertex2f(5 , TextY + UIFont.RowHeight / 2);
+     glVertex2f(15, TextY + UIFont.RowHeight / 2);
    glEnd;
    S := Format('%d - %s', [i, Graphs[i].Name]);
    if not Graphs[i].Visible then
@@ -689,13 +691,13 @@ var
 
 procedure Update(Container: TUIContainer);
 
-  function SpeedFactor: TGLfloat;
+  function SpeedFactor: Single;
   begin
    Result := Window.Fps.SecondsPassed * 50; { to make everything time-based }
    if Window.Pressed[K_Ctrl] then Result *= 10;
   end;
 
-  procedure MultiplyGLScale(Multiplier: TGLfloat);
+  procedure MultiplyGLScale(Multiplier: Single);
   begin
     Multiplier := Power(Multiplier, SpeedFactor);
     if (ScaleX * Multiplier < 0.00001) or
@@ -716,7 +718,7 @@ procedure Update(Container: TUIContainer);
     Window.Invalidate;
   end;
 
-  procedure MultiplyGLScaleX(Multiplier: TGLfloat);
+  procedure MultiplyGLScaleX(Multiplier: Single);
   begin
     Multiplier := Power(Multiplier, SpeedFactor);
     if ScaleX * Multiplier < 0.00001 then
@@ -729,7 +731,7 @@ procedure Update(Container: TUIContainer);
     Window.Invalidate;
   end;
 
-  procedure MultiplyGLScaleY(Multiplier: TGLfloat);
+  procedure MultiplyGLScaleY(Multiplier: Single);
   begin
     Multiplier := Power(Multiplier, SpeedFactor);
     if ScaleY * Multiplier < 0.00001 then
@@ -742,7 +744,7 @@ procedure Update(Container: TUIContainer);
     Window.Invalidate;
   end;
 
-  procedure AddGL(var Value: TGLfloat; const Change: TGLfloat);
+  procedure AddGL(var Value: Single; const Change: Single);
   begin
    Value += Change * SpeedFactor;
    Window.Invalidate;
@@ -1010,7 +1012,7 @@ begin
           'Version ' + Version,
           'By Michalis Kamburelis.',
           '',
-          '[http://castle-engine.sourceforge.net/glplotter_and_gen_function.php]',
+          '[https://castle-engine.io/glplotter_and_gen_function.php]',
           '',
           'Compiled with ' + SCompilerDescription +'.' ]);
   10: Window.Close;
@@ -1078,7 +1080,7 @@ begin
           '  --custom-size / -c SIZE' +nl+
           '                        Set size of custom grid' +nl+
           nl+
-          TCastleWindowCustom.ParseParametersHelp(StandardParseOptions, true) +nl+
+          TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
           nl+
           SCastleEngineProgramHelpSuffix(DisplayApplicationName, Version, true));
         Halt;
@@ -1104,7 +1106,7 @@ end;
 begin
   OnGetApplicationName := @MyGetApplicationName;
 
-  Window := TCastleWindowCustom.Create(Application);
+  Window := TCastleWindowBase.Create(Application);
 
   { initialize RecentMenu }
   RecentMenu := TWindowRecentFiles.Create(nil);
