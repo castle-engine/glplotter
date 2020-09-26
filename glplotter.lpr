@@ -48,7 +48,7 @@ uses SysUtils, Generics.Collections, Math,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors,
   CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls,
-  CastleControlsImages, CastleDownload;
+  CastleControlsImages, CastleDownload, CastleRenderContext;
 
 {$define read_interface}
 {$define read_implementation}
