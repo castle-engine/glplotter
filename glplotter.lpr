@@ -22,8 +22,6 @@
 
 program glplotter;
 
-{$warning TODO: THIS APPLICATION USES DIRECT OPENGL RENDERING, AND IN FIXED-FUNCTION PIPELINE. IT IS NO LONGER SUPPORTED BY LATEST CGE.}
-
 { TODO:
   - format pliku: kolor= i specyfikacja koloru wykresu
   - podawanie wlasnego kolor schema parametrami (albo plik ini ?)
@@ -43,7 +41,7 @@ program glplotter;
 {$apptype GUI}
 
 uses SysUtils, Generics.Collections, Math,
-  CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Classes,
+  CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Classes, CastleRenderOptions,
   CastleClassUtils, CastleMessages, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors, CastleUIControls,
@@ -571,34 +569,44 @@ procedure Render(Container: TUIContainer);
    end;
   end;
 
+  function Transform(const X, Y: Single): TVector2;
+  begin
+    Result := Vector2(
+      (X * ScaleX) + MoveX,
+      (Y * ScaleY) + MoveY
+    );
+  end;
+
   procedure ShowGraph(const Graph: TGraph);
-  var i: integer;
+  var
+    i: integer;
+    RenderPoints: TVector2List;
   begin
    with Graph do
    if Visible then
    begin
-    glColorv(Color);
-    if BoolOptions[boOnlyPoints] then
-    begin
-     RenderContext.PointSize := 3;
-     glBegin(GL_POINTS);
-     for i := 0 to Points.Count-1 do
-      if not points.L[i].break then
-       glVertex2f(points.L[i].x, points.L[i].y);
-     glEnd;
-     RenderContext.PointSize := 1;
-    end else
-    begin
-     glBegin(GL_LINE_STRIP);
-      for i := 0 to Points.Count-1 do
-       if points.L[i].break then
-       begin
-        glEnd;
-        glBegin(GL_LINE_STRIP);
-       end else
-        glVertex2f(points.L[i].x, points.L[i].y);
-     glEnd;
-    end;
+    RenderPoints := TVector2List.Create;
+    try
+      if BoolOptions[boOnlyPoints] then
+      begin
+        for i := 0 to Points.Count - 1 do
+          if not points.L[i].break then
+            RenderPoints.Add(Transform(points.L[i].x, points.L[i].y));
+        DrawPrimitive2D(pmPoints, RenderPoints.ToArray, Color,
+          bsSrcAlpha, bdOneMinusSrcAlpha, { ForceBlending } false,
+          { LineWidth } 1, { PointSize } 3);
+      end else
+      begin
+        for i := 0 to Points.Count - 1 do
+          if points.L[i].break then
+          begin
+            DrawPrimitive2D(pmLineStrip, RenderPoints.ToArray, Color);
+            RenderPoints.Clear;
+          end else
+            RenderPoints.Add(Transform(points.L[i].x, points.L[i].y));
+        DrawPrimitive2D(pmLineStrip, RenderPoints.ToArray, Color);
+      end;
+    finally FreeAndNil(RenderPoints) end;
 
     if BoolOptions[boPointsCoords] then
     begin
@@ -616,7 +624,6 @@ var
   S: string;
 begin
  RenderContext.Clear([cbColor], ColorScheme^[ciBG]);
- glLoadIdentity;
 
  glTranslatef(MoveX, MoveY, 0);
  glScalef(ScaleX, ScaleY, 0);
@@ -1137,7 +1144,6 @@ begin
       Theme.ImagesPersistent[tiWindow].OwnsImage := false;
 
       Window.Open;
-      GLFeatures.EnableFixedFunction := true;
       Application.Run;
     finally FreeAndNil(Graphs) end;
 
