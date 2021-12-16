@@ -46,9 +46,9 @@ uses SysUtils, Generics.Collections, Math,
   CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Classes,
   CastleClassUtils, CastleMessages, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
-  CastleWindowRecentFiles, CastleGLImages, CastleColors,
+  CastleWindowRecentFiles, CastleGLImages, CastleColors, CastleUIControls,
   CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls,
-  CastleControlsImages, CastleDownload, CastleRenderContext;
+  CastleControlsImages, CastleDownload, CastleRenderContext, CastleApplicationProperties;
 
 {$define read_interface}
 {$define read_implementation}
@@ -694,7 +694,7 @@ procedure Update(Container: TUIContainer);
   function SpeedFactor: Single;
   begin
    Result := Window.Fps.SecondsPassed * 50; { to make everything time-based }
-   if Window.Pressed[K_Ctrl] then Result *= 10;
+   if Window.Pressed[keyCtrl] then Result *= 10;
   end;
 
   procedure MultiplyGLScale(Multiplier: Single);
@@ -771,27 +771,27 @@ begin
   end;
 
  with Window do begin
-  if Pressed[K_Up] then AddGL(MoveY, -1);
-  if Pressed[K_Down] then AddGL(MoveY, +1);
+  if Pressed[keyArrowUp] then AddGL(MoveY, -1);
+  if Pressed[keyArrowDown] then AddGL(MoveY, +1);
 
-  if Pressed[K_Right] then AddGL(MoveX, -1);
-  if Pressed[K_Left] then AddGL(MoveX, +1);
+  if Pressed[keyArrowRight] then AddGL(MoveX, -1);
+  if Pressed[keyArrowLeft] then AddGL(MoveX, +1);
 
-  if Pressed[K_Numpad_Minus] or Pressed[K_Minus] or Pressed.Characters['-'] then
+  if Pressed[keyNumpadMinus] or Pressed[keyMinus] or Pressed.Characters['-'] then
     MultiplyGLScale(1 / 1.1);
-  if Pressed[K_Numpad_Plus ] or Pressed[K_Plus ] or Pressed.Characters['+'] then
+  if Pressed[keyNumpadPlus ] or Pressed[keyPlus ] or Pressed.Characters['+'] then
     MultiplyGLScale(1.1);
 
-  if Pressed[K_X] then
+  if Pressed[keyX] then
   begin
-    if Pressed[K_Shift] then
+    if Pressed[keyShift] then
       MultiplyGLScaleX(1 / 1.1) else
       MultiplyGLScaleX(1.1);
   end;
 
-  if Pressed[K_Y] then
+  if Pressed[keyY] then
   begin
-    if Pressed[K_Shift] then
+    if Pressed[keyShift] then
       MultiplyGLScaleY(1 / 1.1) else
       MultiplyGLScaleY(1.1);
   end;
@@ -800,7 +800,7 @@ end;
 
 procedure Motion(Container: TUIContainer; const Event: TInputMotion);
 begin
- if mbLeft in Event.Pressed then
+ if buttonLeft in Event.Pressed then
  begin
   { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
     ostatniego Motion/Down }
@@ -887,12 +887,12 @@ begin
       BoolOptions[bo], true));
    Result.Append(M);
  M := TMenu.Create('_Other');
-   M.Append(TMenuItem.Create('_Restore Default View',     21, K_Home));
+   M.Append(TMenuItem.Create('_Restore Default View',     21, keyHome));
    M.Append(TMenuItemToggleFullScreen.Create(Window.FullScreen));
-   M.Append(TMenuItem.Create('_Save Screen ...',       23, K_F5));
+   M.Append(TMenuItem.Create('_Save Screen ...',       23, keyF5));
    Result.Append(M);
  M := TMenu.Create('_Help');
-   M.Append(TMenuItem.Create('Help About Controls (Keys and Mouse)', 5, K_F1));
+   M.Append(TMenuItem.Create('Help About Controls (Keys and Mouse)', 5, keyF1));
    M.Append(TMenuSeparator.Create);
    M.Append(TMenuItem.Create('About glplotter'                     , 6));
    Result.Append(M);
@@ -1082,7 +1082,7 @@ begin
           nl+
           TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
           nl+
-          SCastleEngineProgramHelpSuffix(DisplayApplicationName, Version, true));
+          ApplicationProperties.Description);
         Halt;
       end;
     1:CustomSize := StrToFloat(Argument);
@@ -1098,13 +1098,9 @@ end;
 
 { main ------------------------------------------------------------ }
 
-function MyGetApplicationName: string;
 begin
-  Result := 'glplotter';
-end;
-
-begin
-  OnGetApplicationName := @MyGetApplicationName;
+  ApplicationProperties.ApplicationName := 'glplotter';
+  ApplicationProperties.Version := Version;
 
   Window := TCastleWindowBase.Create(Application);
 
@@ -1137,7 +1133,8 @@ begin
 
       Theme.MessageInputTextColor := Vector4(0, 0.4, 0, 1.0);
       Theme.MessageTextColor := Black;
-      Theme.Images[tiWindow] := WindowGray;
+      Theme.ImagesPersistent[tiWindow].Image := WindowGray;
+      Theme.ImagesPersistent[tiWindow].OwnsImage := false;
 
       Window.Open;
       GLFeatures.EnableFixedFunction := true;
