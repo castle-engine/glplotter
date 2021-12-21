@@ -1,5 +1,5 @@
 {
-  Copyright 2001-2017 Michalis Kamburelis.
+  Copyright 2001-2021 Michalis Kamburelis.
 
   This file is part of "glplotter".
 
@@ -27,29 +27,15 @@ program glplotter;
   - podawanie wlasnego kolor schema parametrami (albo plik ini ?)
 }
 
-{ Old comments:
-  Uwaga : ten program jest dla Windowsa aplikacja GUI, tzn. domyslnie
-  nie ma przypisanych plikow stdin, stdout i stderr. Pod windowsem chcac
-  zaladowac wykres z stdin musisz wiec zawsze uruchomic program
-  tak zeby jego stdin bylo utworzone - na przyklad, umiescic
-  glplotter na koncu potoku :
-      gen_function 0 100 0.1 "x+1" | glplotter -
-  zadziala zgodnie z oczekiwaniami.
-}
-
-{$I castleconf.inc}
-{$apptype GUI}
+{$ifdef MSWINDOWS} {$apptype GUI} {$endif}
 
 uses SysUtils, Generics.Collections, Math,
-  CastleGL, CastleWindow, CastleUtils, CastleGLUtils, Classes, CastleRenderOptions,
+  CastleWindow, CastleUtils, CastleGLUtils, Classes, CastleRenderOptions,
   CastleClassUtils, CastleMessages, CastleParameters, CastleVectors,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors, CastleUIControls,
   CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls,
   CastleControlsImages, CastleDownload, CastleRenderContext, CastleApplicationProperties;
-
-{$define read_interface}
-{$define read_implementation}
 
 const
   Version = '1.2.5';
@@ -141,12 +127,15 @@ type
 
       @param AColorNumber color number (see TColorItem), counted from 0. }
     constructor CreateFromFile(const URL: string;
-      AColorNumber: Integer);
+      const AColorNumber: Integer);
 
     { Initialize TGraph using function Expression. }
     constructor CreateFromExpression(const Expression: string;
       const X1Str, X2Str, XStepStr: string;
-      AColorNumber: Integer);
+      const AColorNumber: Integer); overload;
+    constructor CreateFromExpression(const Expression: string;
+      const X1, X2, XStep: Extended;
+      const AColorNumber: Integer); overload;
 
     destructor Destroy; override;
   end;
@@ -168,19 +157,26 @@ begin
 end;
 
 constructor TGraph.CreateFromExpression(const Expression: string;
-  const X1Str, X2Str, XStepStr: string; AColorNumber: Integer);
+  const X1Str, X2Str, XStepStr: string;
+  const AColorNumber: Integer);
+begin
+  CreateFromExpression(Expression,
+    ParseConstantFloatExpression(X1Str),
+    ParseConstantFloatExpression(X2Str),
+    ParseConstantFloatExpression(XStepStr),
+    AColorNumber);
+end;
+
+constructor TGraph.CreateFromExpression(const Expression: string;
+  const X1, X2, XStep: Extended;
+  const AColorNumber: Integer);
 var
   I: Integer;
   Expr: TCasScriptExpression;
-  X1, X2, XStep: Extended;
   X, Y: TCasScriptFloat;
 begin
   inherited Create;
   CreateCommon(AColorNumber);
-
-  X1 := ParseConstantFloatExpression(X1Str);
-  X2 := ParseConstantFloatExpression(X2Str);
-  XStep := ParseConstantFloatExpression(XStepStr);
 
   Name := Expression;
 
@@ -206,39 +202,40 @@ begin
   finally FreeAndNil(X) end;
 end;
 
-constructor TGraph.CreateFromFile(const URL: string; AColorNumber: Integer);
+constructor TGraph.CreateFromFile(const URL: string; const AColorNumber: Integer);
 
   procedure CreateFromReader(PointsFile: TTextReader; const AName: string);
   var line: string;
       xy: TXY;
-  const SNameLine = 'name=';
-        SBreakLine = 'break';
+  const
+    SNameLine = 'name=';
+    SBreakLine = 'break';
   begin
-   Name := AName;
+    Name := AName;
 
-   { load Points from PointsFile }
-   while not PointsFile.Eof do
-   begin
-    line := PointsFile.Readln;
-    line := Trim(line);
+    { load Points from PointsFile }
+    while not PointsFile.Eof do
+    begin
+      line := PointsFile.Readln;
+      line := Trim(line);
 
-    if (line = '') or (line[1] = '#') then
-     {to jest komentarz; wiec nic nie rob} else
-    if IsPrefix(SNameLine, line) then
-    begin
-     Name := SEnding(line, Length(SNameLine)+1); {to jest name=}
-    end else
-    begin
-     xy.Break := SameText(line, SBreakLine);
-     { stworz nowy punkt, chyba ze to jest linia z breakiem i (poprzednia linia
-       tez byla z breakiem lub nie bylo poprzednej linii) }
-     if not (xy.Break and ((Points.Count = 0) or Points.Last.Break) ) then
-     begin
-      if not xy.Break then DeFormat(line, '%f %f', [@xy.x, @xy.y]);
-      Points.Add(xy);
-     end;
+      if (line = '') or (line[1] = '#') then
+        {to jest komentarz; wiec nic nie rob} else
+      if IsPrefix(SNameLine, line) then
+      begin
+        Name := SEnding(line, Length(SNameLine)+1); {to jest name=}
+      end else
+      begin
+        xy.Break := SameText(line, SBreakLine);
+        { stworz nowy punkt, chyba ze to jest linia z breakiem i (poprzednia linia
+          tez byla z breakiem lub nie bylo poprzednej linii) }
+        if not (xy.Break and ((Points.Count = 0) or Points.Last.Break) ) then
+        begin
+          if not xy.Break then DeFormat(line, '%f %f', [@xy.x, @xy.y]);
+          Points.Add(xy);
+        end;
+      end;
     end;
-   end;
   end;
 
 var
@@ -264,20 +261,21 @@ end;
 
 destructor TGraph.Destroy;
 begin
- FreeAndNil(Points);
- inherited;
+  FreeAndNil(Points);
+  inherited;
 end;
 
 procedure TGraph.SetVisible(const Value: boolean);
 begin
- FVisible := Value;
- if MenuItem <> nil then MenuItem.Checked := Value;
+  FVisible := Value;
+  if MenuItem <> nil then MenuItem.Checked := Value;
 end;
 
 type
   TGraphList = specialize TObjectList<TGraph>;
 
-var Graphs: TGraphList;
+var
+  Graphs: TGraphList;
 
 { BoolOptions -------------------------------------------------------- }
 
@@ -290,11 +288,10 @@ type
     boOnlyPoints);
 
 var
-  { BoolOptions przechowuje aktualny stan kazdej bool opcji.
-    Tutaj podajemy tez wartosci startowe tych opcji. }
+  { Current boolean options state. }
   BoolOptions: array[TBoolOption]of boolean =
   ( false, false, true, true,
-    true, false, false,
+    true, true, true,
     false, false, false,
     false, false, false,
     false);
@@ -330,81 +327,73 @@ var
 
 { Reset view properties to default, such that all Graphs are visible. }
 procedure HomeState;
-var MinX, MaxX, MinY, MaxY: Float;
-    MiddleX, MiddleY, SizeX, SizeY: Float;
-    i, j: Integer;
+var
+  MinX, MaxX, MinY, MaxY: Float;
+  MiddleX, MiddleY, SizeX, SizeY: Float;
+  i, j: Integer;
 begin
- MinX := MaxFloat;
- MinY := MaxFloat;
- MaxX := -MaxFloat;
- MaxY := -MaxFloat;
- for i := 0 to Graphs.Count-1 do
-  for j := 0 to Graphs[i].Points.Count-1 do
+  MinX := MaxFloat;
+  MinY := MaxFloat;
+  MaxX := -MaxFloat;
+  MaxY := -MaxFloat;
+  for i := 0 to Graphs.Count-1 do
+    for j := 0 to Graphs[i].Points.Count-1 do
+    begin
+      MinX := Min(MinX, Graphs[i].Points.L[j].x);
+      MinY := Min(MinY, Graphs[i].Points.L[j].y);
+      MaxX := Max(MaxX, Graphs[i].Points.L[j].x);
+      MaxY := Max(MaxY, Graphs[i].Points.L[j].y);
+    end;
+
+  if MinX = MaxFloat then
   begin
-   MinX := Min(MinX, Graphs[i].Points.L[j].x);
-   MinY := Min(MinY, Graphs[i].Points.L[j].y);
-   MaxX := Max(MaxX, Graphs[i].Points.L[j].x);
-   MaxY := Max(MaxY, Graphs[i].Points.L[j].y);
+    { This means that there was no points (with Break = false)
+      in graphs (maybe there was no graphs at all) !
+      So we set default MoveXY (look at the middle) and ScaleXY. }
+    MoveX := Window.Width/2;
+    MoveY := Window.Height/2;
+    ScaleX := 100;
+    ScaleY := 100;
+  end else
+  begin
+    SizeX := MaxX - MinX;
+    SizeY := MaxY - MinY;
+
+    { When ScaleX/Y = 1, we see Window.Width/Height pixels.
+      But we want to see SizeX/Y pixels.
+      Also we don't want ScaleX/Y to be too little (this makes a lot of trouble,
+      and OpenGL rendering also has trouble and crawls surprisingly slowly).
+
+      By default we set ScaleX and ScaleY to be equal, as this is most
+      natural for user. }
+    ScaleX := Max(Min(Window.Width / SizeX, Window.Height / SizeY), 0.01);
+    ScaleY := ScaleX;
+
+    MiddleX := (MinX + MaxX) / 2;
+    MiddleY := (MinY + MaxY) / 2;
+
+    { MoveX/Y to look at MiddleX/Y.
+      I want XWindowToUklad(Window.Width/2) = MiddleX.
+      Solve equation (Window.Width/2-MoveX)/ScaleX = MiddleX for MoveX and you got
+      what you need. }
+    MoveX := Window.Width /2 - MiddleX * ScaleX;
+    MoveY := Window.Height/2 - MiddleY * ScaleY;
   end;
 
- if MinX = MaxFloat then
- begin
-  { This means that there was no points (with Break = false)
-    in graphs (maybe there was no graphs at all) !
-    So we set default MoveXY (look at the middle) and ScaleXY. }
-  MoveX := Window.Width/2;
-  MoveY := Window.Height/2;
-  ScaleX := 100;
-  ScaleY := 100;
- end else
- begin
-  SizeX := MaxX - MinX;
-  SizeY := MaxY - MinY;
-
-  { When ScaleX/Y = 1, we see Window.Width/Height pixels.
-    But we want to see SizeX/Y pixels.
-    Also we don't want ScaleX/Y to be too little (this makes a lot of trouble,
-    and OpenGL rendering also has trouble and crawls surprisingly slowly).
-
-    By default we set ScaleX and ScaleY to be equal, as this is most
-    natural for user. }
-  ScaleX := Max(Min(Window.Width / SizeX, Window.Height / SizeY), 0.01);
-  ScaleY := ScaleX;
-
-  MiddleX := (MinX + MaxX) / 2;
-  MiddleY := (MinY + MaxY) / 2;
-
-  { MoveX/Y to look at MiddleX/Y.
-    I want XWindowToUklad(Window.Width/2) = MiddleX.
-    Solve equation (Window.Width/2-MoveX)/ScaleX = MiddleX for MoveX and you got
-    what you need. }
-  MoveX := Window.Width /2 - MiddleX * ScaleX;
-  MoveY := Window.Height/2 - MiddleY * ScaleY;
- end;
-
- Window.Invalidate;
+  Window.Invalidate;
 end;
 
 { funkcje XYWindowToUklad pobieraja pozycje we wspolrzednej okna OpenGL'a
   (czyli 0..Window.Width lub Window.Height)
   i zwracaja jaka jest pozycja punktu na wykresie
-  w tym miejscu okna. }
+  w tym miejscu okna.
+
+  They invent Transform2. }
 function XWindowToUklad(WindowX: Single): Single;
 begin result := (WindowX - MoveX) / ScaleX end;
 
 function YWindowToUklad(WindowY: Single): Single;
 begin result := (WindowY - MoveY) / ScaleY end;
-
-function XUkladToWindow(UkladX: Single): Single;
-begin result := UkladX * ScaleX + MoveX end;
-
-function YUkladToWindow(UkladY: Single): Single;
-begin result := UkladY * ScaleY + MoveY end;
-
-function WindowPosUklad(const X, Y: Extended): TVector2Integer;
-begin
-  Result := Vector2Integer(Round(XUkladToWindow(X)), Round(YUkladToWindow(Y)));
-end;
 
 var
   GraphsListMenu: TMenu;
@@ -493,83 +482,8 @@ end;
 
 procedure Render(Container: TUIContainer);
 
-  procedure ShowGridNumScale(
-    const krok: extended; const LiczbowyString: string;
-    showGrid, showNumScale, showNumbers: boolean;
-    const gridKol, NumScaleKol, NumbersKol: TCastleColor);
-  { ShowGridNumScale draws grid, numbers scale and numbers.
-    Odpowiednie parametry showXxx okreslaja co dokladnie narysowac -
-    dowolna kombinacja trzech powyzszych elementow moze byc wiec narysowana.
-    Parametry xxxKol okreslaja kolory odpowiednich elementow.
-    Parametr LiczbowyString ma zastosowanie tylko do rysowania podzialki liczbowej.
-    Przy kazdej kresce na osi bedzie pisany tekst Format(LiczbowyString, [i, i*krok])
-     gdzie i to wielokrotnosc kroku o jaka dana kreska jest wysunieta.
-     Przykladowe wartosci LiczbowyTekst to '%d', '%d*Pi', '%1: f'. }
-  var i, minx, maxx, miny, maxy: integer;
-  const NumScaleLength =10;
-  begin
-   if not (showGrid or showNumScale or showNumbers) then exit;
-
-   { minx to najmniejsza wartosc taka ze minx*krok miesci sie na ekranie.
-     Podobnie maxx, miny, maxy. }
-   minx := Ceil(XWindowToUklad(0) / krok);
-   miny := Ceil(YWindowToUklad(0) / krok);
-   maxx := Floor(XWindowToUklad(Window.Width ) / krok);
-   maxy := Floor(YWindowToUklad(Window.Height) / krok);
-
-   if ShowGrid then
-   begin
-    glColorv(gridKol);
-    glBegin(GL_LINES);
-    { przesuwajac sie o wartosc integer unikamy przy okazji kumulacji bledow
-      zaokraglen zmiennoprzecinkowych gdybysmy przesuwali sie o krok
-      zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
-    for i := minx to maxx do
-    begin
-     glVertex2f(i*krok, YWindowToUklad(0));
-     glVertex2f(i*krok, YWindowToUklad(Window.Height));
-    end;
-    for i := miny to maxy do
-    begin
-     glVertex2f(XWindowToUklad(0), i*krok); glVertex2f(XWindowToUklad(Window.Width), i*krok);
-    end;
-    glEnd;
-   end;
-
-   if ShowNumScale then
-   begin
-    glColorv(NumScaleKol);
-    glBegin(GL_LINES);
-    { przesuwajac sie o wartosc integer unikamy przy okazji kumulacji bledow
-      zaokraglen zmiennoprzecinkowych gdybysmy przesuwali sie o krok
-      zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
-    for i := minx to maxx do
-    begin
-     glVertex2f(i*krok, -NumScaleLength/ScaleY);
-     glVertex2f(i*krok,+ NumScaleLength/ScaleY);
-    end;
-    for i := miny to maxy do
-    begin
-     glVertex2f(-NumScaleLength/ScaleX, i*krok);
-     glVertex2f(+NumScaleLength/ScaleX, i*krok);
-    end;
-    glEnd;
-   end;
-
-   if ShowNumbers then
-   begin
-     glPushMatrix; // we need to push/pop matrix around, ShowGraph assumes it doesn't change
-       for i := minx to maxx do
-         UIFont.Print(WindowPosUklad(i*krok, 0), NumbersKol,
-           Format(LiczbowyString, [i, i*krok]));
-       for i := miny to maxy do
-         UIFont.Print(WindowPosUklad(0, i*krok), NumbersKol,
-           Format(LiczbowyString, [i, i*krok]));
-     glPopMatrix;
-   end;
-  end;
-
-  function Transform(const X, Y: Single): TVector2;
+  { Transform X, Y into graph coordinate-space. }
+  function Transform2(const X, Y: Single): TVector2;
   begin
     Result := Vector2(
       (X * ScaleX) + MoveX,
@@ -577,120 +491,193 @@ procedure Render(Container: TUIContainer);
     );
   end;
 
+  { Draws grid, numbers scale and numbers.
+    Odpowiednie parametry showXxx okreslaja co dokladnie narysowac -
+    dowolna kombinacja trzech powyzszych elementow moze byc wiec narysowana.
+    Parametry xxxKol okreslaja kolory odpowiednich elementow.
+    Parametr LiczbowyString ma zastosowanie tylko do rysowania podzialki liczbowej.
+    Przy kazdej kresce na osi bedzie pisany tekst Format(LiczbowyString, [i, i*krok])
+     gdzie i to wielokrotnosc kroku o jaka dana kreska jest wysunieta.
+     Przykladowe wartosci LiczbowyTekst to '%d', '%d*Pi', '%1: f'. }
+  procedure ShowGridNumScale(
+    const krok: extended; const LiczbowyString: string;
+    showGrid, showNumScale, showNumbers: boolean;
+    const gridKol, NumScaleKol, NumbersKol: TCastleColor);
+  var
+    i, minx, maxx, miny, maxy: integer;
+    RenderPoints: TVector2List;
+  const
+    NumScaleLength =10;
+  begin
+    if not (showGrid or showNumScale or showNumbers) then exit;
+
+    { minx to najmniejsza wartosc taka ze minx*krok miesci sie na ekranie.
+      Podobnie maxx, miny, maxy. }
+    minx := Ceil(XWindowToUklad(0) / krok);
+    miny := Ceil(YWindowToUklad(0) / krok);
+    maxx := Floor(XWindowToUklad(Window.Width ) / krok);
+    maxy := Floor(YWindowToUklad(Window.Height) / krok);
+
+    if ShowGrid then
+    begin
+      RenderPoints := TVector2List.Create;
+      try
+        { przesuwajac sie o wartosc integer unikamy przy okazji kumulacji bledow
+          zaokraglen zmiennoprzecinkowych gdybysmy przesuwali sie o krok
+          zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
+        for i := minx to maxx do
+        begin
+          RenderPoints.Add(Transform2(i*krok, YWindowToUklad(0)));
+          RenderPoints.Add(Transform2(i*krok, YWindowToUklad(Window.Height)));
+        end;
+        for i := miny to maxy do
+        begin
+          RenderPoints.Add(Transform2(XWindowToUklad(0), i*krok));
+          RenderPoints.Add(Transform2(XWindowToUklad(Window.Width), i*krok));
+        end;
+        DrawPrimitive2D(pmLines, RenderPoints.ToArray, gridKol);
+      finally FreeAndNil(RenderPoints) end;
+    end;
+
+    if ShowNumScale then
+    begin
+      RenderPoints := TVector2List.Create;
+      try
+        { przesuwajac sie o wartosc integer unikamy przy okazji kumulacji bledow
+          zaokraglen zmiennoprzecinkowych gdybysmy przesuwali sie o krok
+          zmieniajac jakas wartosc o +krok w kazdym kroku petli. }
+        for i := minx to maxx do
+        begin
+          RenderPoints.Add(Transform2(i*krok, -NumScaleLength/ScaleY));
+          RenderPoints.Add(Transform2(i*krok,+ NumScaleLength/ScaleY));
+        end;
+        for i := miny to maxy do
+        begin
+          RenderPoints.Add(Transform2(-NumScaleLength/ScaleX, i*krok));
+          RenderPoints.Add(Transform2(+NumScaleLength/ScaleX, i*krok));
+        end;
+        DrawPrimitive2D(pmLines, RenderPoints.ToArray, NumScaleKol);
+      finally FreeAndNil(RenderPoints) end;
+    end;
+
+    if ShowNumbers then
+    begin
+      for i := minx to maxx do
+        UIFont.Print(Transform2(i*krok, 0), NumbersKol,
+          Format(LiczbowyString, [i, i*krok]));
+      for i := miny to maxy do
+        UIFont.Print(Transform2(0, i*krok), NumbersKol,
+          Format(LiczbowyString, [i, i*krok]));
+    end;
+  end;
+
   procedure ShowGraph(const Graph: TGraph);
   var
     i: integer;
+    Points: TXYList;
     RenderPoints: TVector2List;
   begin
-   with Graph do
-   if Visible then
-   begin
-    RenderPoints := TVector2List.Create;
-    try
-      if BoolOptions[boOnlyPoints] then
-      begin
-        for i := 0 to Points.Count - 1 do
-          if not points.L[i].break then
-            RenderPoints.Add(Transform(points.L[i].x, points.L[i].y));
-        DrawPrimitive2D(pmPoints, RenderPoints.ToArray, Color,
-          bsSrcAlpha, bdOneMinusSrcAlpha, { ForceBlending } false,
-          { LineWidth } 1, { PointSize } 3);
-      end else
-      begin
-        for i := 0 to Points.Count - 1 do
-          if points.L[i].break then
-          begin
-            DrawPrimitive2D(pmLineStrip, RenderPoints.ToArray, Color);
-            RenderPoints.Clear;
-          end else
-            RenderPoints.Add(Transform(points.L[i].x, points.L[i].y));
-        DrawPrimitive2D(pmLineStrip, RenderPoints.ToArray, Color);
-      end;
-    finally FreeAndNil(RenderPoints) end;
-
-    if BoolOptions[boPointsCoords] then
+    if Graph.Visible then
     begin
-      for i := 0 to Points.Count-1 do
-        if not points.L[i].break then
-          UIFont.Print(WindowPosUklad(points.L[i].x, points.L[i].y), Color,
-            Format('(%f,%f)', [points.L[i].x, points.L[i].y]));
+     Points := Graph.Points;
+     RenderPoints := TVector2List.Create;
+     try
+       if BoolOptions[boOnlyPoints] then
+       begin
+         for i := 0 to Points.Count - 1 do
+           if not points.L[i].break then
+             RenderPoints.Add(Transform2(points.L[i].x, points.L[i].y));
+         DrawPrimitive2D(pmPoints, RenderPoints.ToArray, Graph.Color,
+           bsSrcAlpha, bdOneMinusSrcAlpha, { ForceBlending } false,
+           { LineWidth } 1, { PointSize } 3);
+       end else
+       begin
+         for i := 0 to Points.Count - 1 do
+           if points.L[i].break then
+           begin
+             DrawPrimitive2D(pmLineStrip, RenderPoints.ToArray, Graph.Color);
+             RenderPoints.Clear;
+           end else
+             RenderPoints.Add(Transform2(points.L[i].x, points.L[i].y));
+         DrawPrimitive2D(pmLineStrip, RenderPoints.ToArray, Graph.Color);
+       end;
+     finally FreeAndNil(RenderPoints) end;
+
+     if BoolOptions[boPointsCoords] then
+     begin
+       for i := 0 to Points.Count-1 do
+         if not points.L[i].break then
+           UIFont.Print(Transform2(points.L[i].x, points.L[i].y), Graph.Color,
+             Format('(%f,%f)', [points.L[i].x, points.L[i].y]));
+     end;
     end;
-   end;
   end;
 
+const
+  CrosshairStipple: TLineStipple = (Factor: 10; Pattern: $AAAA);
 var
   i, j: integer;
   TextY: Single;
   S: string;
 begin
- RenderContext.Clear([cbColor], ColorScheme^[ciBG]);
+  RenderContext.Clear([cbColor], ColorScheme^[ciBG]);
 
- glTranslatef(MoveX, MoveY, 0);
- glScalef(ScaleX, ScaleY, 0);
+  ShowGridNumScale(1, '%d',
+    BoolOptions[boGrid1],   BoolOptions[boNumScale1],   BoolOptions[boNumbers1],
+    ColorScheme^[ciGrid1],  ColorScheme^[ciNumScale1],  ColorScheme^[ciNumbers1]);
+  ShowGridNumScale(Pi, '%d*Pi',
+    BoolOptions[boGridPi],  BoolOptions[boNumScalePi],  BoolOptions[boNumbersPi],
+    ColorScheme^[ciGridPi], ColorScheme^[ciNumScalePi], ColorScheme^[ciNumbersPi]);
+  ShowGridNumScale(CustomSize, '%1:f',
+    BoolOptions[boGridCustom],  BoolOptions[boNumScaleCustom],  BoolOptions[boNumbersCustom],
+    ColorScheme^[ciGridCustom], ColorScheme^[ciNumScaleCustom], ColorScheme^[ciNumbersCustom]);
 
- ShowGridNumScale(1, '%d',
-   BoolOptions[boGrid1],   BoolOptions[boNumScale1],   BoolOptions[boNumbers1],
-   ColorScheme^[ciGrid1],  ColorScheme^[ciNumScale1],  ColorScheme^[ciNumbers1]);
- ShowGridNumScale(Pi, '%d*Pi',
-   BoolOptions[boGridPi],  BoolOptions[boNumScalePi],  BoolOptions[boNumbersPi],
-   ColorScheme^[ciGridPi], ColorScheme^[ciNumScalePi], ColorScheme^[ciNumbersPi]);
- ShowGridNumScale(CustomSize, '%1:f',
-   BoolOptions[boGridCustom],  BoolOptions[boNumScaleCustom],  BoolOptions[boNumbersCustom],
-   ColorScheme^[ciGridCustom], ColorScheme^[ciNumScaleCustom], ColorScheme^[ciNumbersCustom]);
-
- if BoolOptions[boMainXYLines] then
- begin
-  glColorv(ColorScheme^[ciMainXYLines]);
-  glBegin(GL_LINES);
-   glVertex2f(0, YWindowToUklad(0)); glVertex2f(0, YWindowToUklad(Window.Height));
-   glVertex2f(XWindowToUklad(0), 0); glVertex2f(XWindowToUklad(Window.Width), 0);
-  glEnd;
- end;
-
- for j := 0 to Graphs.Count-1 do ShowGraph(Graphs[j]);
-
- if BoolOptions[boCrosshair] then
- begin
-  glLoadIdentity;
-  glColorv(ColorScheme^[ciCrosshair]);
-
-  glLineStipple(10, $AAAA);
-  glEnable(GL_LINE_STIPPLE);
-  glBegin(GL_LINES);
-   glVertex2f(Window.Width/2, 0); glVertex2f(Window.Width/2, Window.Height);
-   glVertex2f(0, Window.Height/2); glVertex2f(Window.Width, Window.Height/2);
-  glEnd;
-  glDisable(GL_LINE_STIPPLE);
-
-  UIFont.Print(Window.Width div 2, Window.Height div 2,
-    ColorScheme^[ciCrosshair],
-    Format('%f, %f', [XWindowToUklad(Window.Width/2), YWindowToUklad(Window.Height/2)]));
- end;
-
- if BoolOptions[boMap] then
- begin
-  glLoadIdentity;
-
-  TextY := 10;
-  UIFont.Print(10, TextY, ColorScheme^[ciCrosshair],
-    Format('Scale %f, %f. Move %f, %f. %d graphs.',
-    [ScaleX, ScaleY, MoveX, MoveY, Graphs.Count]));
-
-  for i := 0 to Graphs.Count-1 do
+  if BoolOptions[boMainXYLines] then
   begin
-   glColorv(Graphs[i].Color);
-   TextY += UIFont.RowHeight + 2;
-
-   glBegin(GL_LINES);
-     glVertex2f(5 , TextY + UIFont.RowHeight / 2);
-     glVertex2f(15, TextY + UIFont.RowHeight / 2);
-   glEnd;
-   S := Format('%d - %s', [i, Graphs[i].Name]);
-   if not Graphs[i].Visible then
-     S := '{' + S + '}';
-   UIFont.Print(20, TextY, Graphs[i].Color, S);
+    DrawPrimitive2D(pmLines, [
+      Transform2(0, YWindowToUklad(0)),
+      Transform2(0, YWindowToUklad(Window.Height)),
+      Transform2(XWindowToUklad(0), 0),
+      Transform2(XWindowToUklad(Window.Width), 0)
+    ], ColorScheme^[ciMainXYLines]);
   end;
- end;
+
+  for j := 0 to Graphs.Count-1 do ShowGraph(Graphs[j]);
+
+  if BoolOptions[boCrosshair] then
+  begin
+    DrawPrimitive2D(pmLines, CrosshairStipple, [
+      Vector2(Window.Width/2, 0),
+      Vector2(Window.Width/2, Window.Height),
+      Vector2(0, Window.Height/2),
+      Vector2(Window.Width, Window.Height/2)
+    ], ColorScheme^[ciCrosshair]);
+
+    UIFont.Print(Transform2(Window.Width div 2, Window.Height div 2),
+      ColorScheme^[ciCrosshair],
+      Format('%f, %f', [XWindowToUklad(Window.Width/2), YWindowToUklad(Window.Height/2)]));
+  end;
+
+  if BoolOptions[boMap] then
+  begin
+    TextY := 10;
+    UIFont.Print(10, TextY, ColorScheme^[ciCrosshair],
+      Format('Scale %f, %f. Move %f, %f. %d graphs.',
+      [ScaleX, ScaleY, MoveX, MoveY, Graphs.Count]));
+
+    for i := 0 to Graphs.Count-1 do
+    begin
+      TextY += UIFont.RowHeight + 2;
+      DrawPrimitive2D(pmLines, CrosshairStipple, [
+        Vector2(5 , TextY + UIFont.RowHeight / 2),
+        Vector2(15, TextY + UIFont.RowHeight / 2)
+      ], Graphs[i].Color);
+      S := Format('%d - %s', [i, Graphs[i].Name]);
+      if not Graphs[i].Visible then
+        S := '{' + S + '}';
+      UIFont.Print(20, TextY, Graphs[i].Color, S);
+    end;
+  end;
 end;
 
 var
@@ -700,8 +687,8 @@ procedure Update(Container: TUIContainer);
 
   function SpeedFactor: Single;
   begin
-   Result := Window.Fps.SecondsPassed * 50; { to make everything time-based }
-   if Window.Pressed[keyCtrl] then Result *= 10;
+    Result := Window.Fps.SecondsPassed * 50; { to make everything time-based }
+    if Window.Pressed[keyCtrl] then Result *= 10;
   end;
 
   procedure MultiplyGLScale(Multiplier: Single);
@@ -753,8 +740,8 @@ procedure Update(Container: TUIContainer);
 
   procedure AddGL(var Value: Single; const Change: Single);
   begin
-   Value += Change * SpeedFactor;
-   Window.Invalidate;
+    Value += Change * SpeedFactor;
+    Window.Invalidate;
   end;
 
   { Interpretuje wszystkie pozostale ParStr(1) .. ParStr(ParCount) jako
@@ -777,44 +764,48 @@ begin
     UpdateFirst := false;
   end;
 
- with Window do begin
-  if Pressed[keyArrowUp] then AddGL(MoveY, -1);
-  if Pressed[keyArrowDown] then AddGL(MoveY, +1);
+  if Container.Pressed[keyArrowUp] then AddGL(MoveY, -1);
+  if Container.Pressed[keyArrowDown] then AddGL(MoveY, +1);
 
-  if Pressed[keyArrowRight] then AddGL(MoveX, -1);
-  if Pressed[keyArrowLeft] then AddGL(MoveX, +1);
+  if Container.Pressed[keyArrowRight] then AddGL(MoveX, -1);
+  if Container.Pressed[keyArrowLeft] then AddGL(MoveX, +1);
 
-  if Pressed[keyNumpadMinus] or Pressed[keyMinus] or Pressed.Characters['-'] then
+  if Container.Pressed[keyNumpadMinus] or
+     Container.Pressed[keyMinus] or
+     Container.Pressed.Characters['-'] then
     MultiplyGLScale(1 / 1.1);
-  if Pressed[keyNumpadPlus ] or Pressed[keyPlus ] or Pressed.Characters['+'] then
+  if Container.Pressed[keyNumpadPlus ] or
+     Container.Pressed[keyPlus ] or
+     Container.Pressed.Characters['+'] then
     MultiplyGLScale(1.1);
 
-  if Pressed[keyX] then
+  if Container.Pressed[keyX] then
   begin
-    if Pressed[keyShift] then
-      MultiplyGLScaleX(1 / 1.1) else
+    if Container.Pressed[keyShift] then
+      MultiplyGLScaleX(1 / 1.1)
+    else
       MultiplyGLScaleX(1.1);
   end;
 
-  if Pressed[keyY] then
+  if Container.Pressed[keyY] then
   begin
-    if Pressed[keyShift] then
-      MultiplyGLScaleY(1 / 1.1) else
+    if Container.Pressed[keyShift] then
+      MultiplyGLScaleY(1 / 1.1)
+    else
       MultiplyGLScaleY(1.1);
   end;
- end;
 end;
 
 procedure Motion(Container: TUIContainer; const Event: TInputMotion);
 begin
- if buttonLeft in Event.Pressed then
- begin
-  { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
-    ostatniego Motion/Down }
-  MoveX := MoveX + Event.Position[0] - Event.OldPosition[0];
-  MoveY := MoveY + Event.Position[1] - Event.OldPosition[1];
-  Window.Invalidate;
- end;
+  if buttonLeft in Event.Pressed then
+  begin
+    { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
+      ostatniego Motion/Down }
+    MoveX := MoveX + Event.Position[0] - Event.OldPosition[0];
+    MoveY := MoveY + Event.Position[1] - Event.OldPosition[1];
+    Window.Invalidate;
+  end;
 end;
 
 { menu-related things -------------------------------------------------------- }
@@ -860,49 +851,49 @@ var
   bo: TBoolOption;
   NextRecentMenuItem: TMenuEntry;
 begin
- Result := TMenu.Create('Main menu');
- M := TMenu.Create('_File');
-   M.Append(TMenuItem.Create('_Open Graph from File ...', 101, CtrlO));
-   M.Append(TMenuItem.Create('_Add Graph from File ...', 102, CtrlA));
-   NextRecentMenuItem := TMenuSeparator.Create;
-   M.Append(NextRecentMenuItem);
-   RecentMenu.NextMenuItem := NextRecentMenuItem;
-   M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
-   Result.Append(M);
- M := TMenu.Create('F_unctions');
-   M.Append(TMenuItem.Create('_Open Graph with Function ...', 201));
-   M.Append(TMenuItem.Create('_Add Graph with Function ...', 202));
-   M.Append(TMenuSeparator.Create);
-   M2 := TMenu.Create('Add Graph with _Sample Function');
-     M2.Append(TMenuItem.Create('_sin(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 203));
-     M2.Append(TMenuItem.Create('_cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 204));
-     M2.Append(TMenuItem.Create('sin(x) > cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 205));
-   M.Append(M2);
-   Result.Append(M);
- M := TMenu.Create('_Graphs');
-   M.Append(TMenuItem.Create('_Hide All Graphs',      30));
-   M.Append(TMenuItem.Create('_Show All Graphs',      31));
-   M.Append(TMenuSeparator.Create);
-   M.Append(TMenuItem.Create('_Close All Graphs', 103));
-   M.Append(TMenuSeparator.Create);
-   GraphsListMenu := M;
-   Result.Append(M);
- M := TMenu.Create('_View');
-   for bo := Low(bo) to High(bo) do
-    M.Append(TMenuItemChecked.Create(
-      BoolOptionsMenuNames[bo], 900+Ord(bo), BoolOptionsKeys[bo],
-      BoolOptions[bo], true));
-   Result.Append(M);
- M := TMenu.Create('_Other');
-   M.Append(TMenuItem.Create('_Restore Default View',     21, keyHome));
-   M.Append(TMenuItemToggleFullScreen.Create(Window.FullScreen));
-   M.Append(TMenuItem.Create('_Save Screen ...',       23, keyF5));
-   Result.Append(M);
- M := TMenu.Create('_Help');
-   M.Append(TMenuItem.Create('Help About Controls (Keys and Mouse)', 5, keyF1));
-   M.Append(TMenuSeparator.Create);
-   M.Append(TMenuItem.Create('About glplotter'                     , 6));
-   Result.Append(M);
+  Result := TMenu.Create('Main menu');
+  M := TMenu.Create('_File');
+    M.Append(TMenuItem.Create('_Open Graph from File ...', 101, CtrlO));
+    M.Append(TMenuItem.Create('_Add Graph from File ...', 102, CtrlA));
+    NextRecentMenuItem := TMenuSeparator.Create;
+    M.Append(NextRecentMenuItem);
+    RecentMenu.NextMenuItem := NextRecentMenuItem;
+    M.Append(TMenuItem.Create('_Exit',      10, CharEscape));
+    Result.Append(M);
+  M := TMenu.Create('F_unctions');
+    M.Append(TMenuItem.Create('_Open Graph with Function ...', 201));
+    M.Append(TMenuItem.Create('_Add Graph with Function ...', 202));
+    M.Append(TMenuSeparator.Create);
+    M2 := TMenu.Create('Add Graph with _Sample Function');
+      M2.Append(TMenuItem.Create('_sin(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 203));
+      M2.Append(TMenuItem.Create('_cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 204));
+      M2.Append(TMenuItem.Create('sin(x) > cos(x) (on [-10 * Pi, 10 * Pi], with 0.1 step)', 205));
+    M.Append(M2);
+    Result.Append(M);
+  M := TMenu.Create('_Graphs');
+    M.Append(TMenuItem.Create('_Hide All Graphs',      30));
+    M.Append(TMenuItem.Create('_Show All Graphs',      31));
+    M.Append(TMenuSeparator.Create);
+    M.Append(TMenuItem.Create('_Close All Graphs', 103));
+    M.Append(TMenuSeparator.Create);
+    GraphsListMenu := M;
+    Result.Append(M);
+  M := TMenu.Create('_View');
+    for bo := Low(bo) to High(bo) do
+     M.Append(TMenuItemChecked.Create(
+       BoolOptionsMenuNames[bo], 900+Ord(bo), BoolOptionsKeys[bo],
+       BoolOptions[bo], true));
+    Result.Append(M);
+  M := TMenu.Create('_Other');
+    M.Append(TMenuItem.Create('_Restore Default View',     21, keyHome));
+    M.Append(TMenuItemToggleFullScreen.Create(Window.FullScreen));
+    M.Append(TMenuItem.Create('_Save Screen ...',       23, keyF5));
+    Result.Append(M);
+  M := TMenu.Create('_Help');
+    M.Append(TMenuItem.Create('Help About Controls (Keys and Mouse)', 5, keyF1));
+    M.Append(TMenuSeparator.Create);
+    M.Append(TMenuItem.Create('About glplotter'                     , 6));
+    Result.Append(M);
 end;
 
 var
@@ -1002,57 +993,58 @@ procedure MenuClick(Container: TUIContainer; Item: TMenuItem);
     HomeState;
   end;
 
-var bo: TBoolOption;
+var
+  bo: TBoolOption;
 begin
- case Item.IntData of
-  5:  MessageOK(Window,
-        ['Keys to change view (not available as menu items):',
-         '  arrows      : move',
-         '  +/-         : scale',
-         '  x/X         : scale only horizontally',
-         '  y/Y         : scale only vertically',
-         'Hold down Ctrl to make these keys work 10x faster. ',
-         '',
-         'You can also move view by dragging while holding left mouse button.']);
-  6:  MessageOK(Window,
-        [ 'glplotter: plotting graphs, of functions and others.',
-          'Version ' + Version,
-          'By Michalis Kamburelis.',
-          '',
-          '[https://castle-engine.io/glplotter_and_gen_function.php]',
-          '',
-          'Compiled with ' + SCompilerDescription +'.' ]);
-  10: Window.Close;
+  case Item.IntData of
+    5:  MessageOK(Window,
+          ['Keys to change view (not available as menu items):',
+           '  arrows      : move',
+           '  +/-         : scale',
+           '  x/X         : scale only horizontally',
+           '  y/Y         : scale only vertically',
+           'Hold down Ctrl to make these keys work 10x faster. ',
+           '',
+           'You can also move view by dragging while holding left mouse button.']);
+    6:  MessageOK(Window,
+          [ 'glplotter: plotting graphs, of functions and others.',
+            'Version ' + Version,
+            'By Michalis Kamburelis.',
+            '',
+            '[https://castle-engine.io/glplotter_and_gen_function.php]',
+            '',
+            'Compiled with ' + SCompilerDescription +'.' ]);
+    10: Window.Close;
 
-  21: HomeState;
-  23: Window.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
+    21: HomeState;
+    23: Window.SaveScreenDialog(FileNameAutoInc('glplotter_screen_%d.png'));
 
-  30: SetVisibleAll(false);
-  31: SetVisibleAll(true);
+    30: SetVisibleAll(false);
+    31: SetVisibleAll(true);
 
-  101: OpenOrAddGraphFromFile(true);
-  102: OpenOrAddGraphFromFile(false);
-  103: CloseAllGraphs;
+    101: OpenOrAddGraphFromFile(true);
+    102: OpenOrAddGraphFromFile(false);
+    103: CloseAllGraphs;
 
-  201: OpenGraphFromExpression;
-  202: AddGraphFromExpression;
-  203: AddSampleGraphFromExpression('sin(x)'         , '-10 * Pi', '10 * Pi', '0.1');
-  204: AddSampleGraphFromExpression('cos(x)'         , '-10 * Pi', '10 * Pi', '0.1');
-  205: AddSampleGraphFromExpression('sin(x) > cos(x)', '-10 * Pi', '10 * Pi', '0.1');
+    201: OpenGraphFromExpression;
+    202: AddGraphFromExpression;
+    203: AddSampleGraphFromExpression('sin(x)'         , '-10 * Pi', '10 * Pi', '0.1');
+    204: AddSampleGraphFromExpression('cos(x)'         , '-10 * Pi', '10 * Pi', '0.1');
+    205: AddSampleGraphFromExpression('sin(x) > cos(x)', '-10 * Pi', '10 * Pi', '0.1');
 
-  900..999:
-    begin
-     bo := TBoolOption(Item.IntData-900);
-     BoolOptions[bo] := not BoolOptions[bo];
-    end;
-  1000..2000:
-    begin
-     with Graphs[Item.IntData-1000] do Visible := not Visible;
-     Window.Invalidate;
-    end;
-  else Exit;
- end;
- Window.Invalidate;
+    900..999:
+      begin
+       bo := TBoolOption(Item.IntData-900);
+       BoolOptions[bo] := not BoolOptions[bo];
+      end;
+    1000..2000:
+      begin
+       with Graphs[Item.IntData-1000] do Visible := not Visible;
+       Window.Invalidate;
+      end;
+    else Exit;
+  end;
+  Window.Invalidate;
 end;
 
 { params parsing ------------------------------------------------------------ }
@@ -1124,6 +1116,15 @@ begin
       { parse parameters }
       Window.ParseParameters;
       Parameters.Parse(Options, @OptionProc, nil);
+
+      { if no graphs, then add some defaults }
+      if Graphs.Count = 0 then
+      begin
+        Graphs.Add(TGraph.CreateFromExpression('sin(x)', -10, 10, 0.1, Graphs.Count));
+        Graphs.Add(TGraph.CreateFromExpression('cos(x)', -10, 10, 0.1, Graphs.Count));
+        Graphs.Add(TGraph.CreateFromExpression('x', -10, 10, 0.1, Graphs.Count));
+        //Graphs.Add(TGraph.CreateFromExpression('x^2', -10, 10, 0.1, Graphs.Count));
+      end;
 
       { basic glw callbacks }
       Window.OnUpdate := @Update;
