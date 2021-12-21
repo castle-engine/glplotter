@@ -54,7 +54,7 @@ type
 
 const
   ciGraphMax = ciGraph3;
-  IloscGraphKol = Ord(ciGraphMax)-Ord(ciGraph1)+1;
+  GraphColorsInScheme = Ord(ciGraphMax) - Ord(ciGraph1) + 1;
 
   { zestawy kolorow : }
   ColorSchemeDark: TColorScheme =
@@ -111,13 +111,17 @@ type
   private
     FVisible: boolean;
     procedure SetVisible(const Value: boolean);
-    procedure CreateCommon(AColorNumber: Integer);
+    procedure CreateCommon(const AColorNumber: Integer);
   public
     MenuItem: TMenuItemChecked;
     Points: TXYList;
+    ColorNumber: Integer;
     Color: TCastleColor;
     Name: string;
     property Visible: boolean read FVisible write SetVisible;
+
+    { Update Color from ColorNumber and ColorScheme. }
+    procedure UpdateColor;
 
     { Initialize TGraph reading Points from file URL.
       URL = '-' means stdin.
@@ -125,7 +129,7 @@ type
       Graph name will be taken from URL, or (if line "name=..." is
       present in PointsFile) then it will be used.
 
-      @param AColorNumber color number (see TColorItem), counted from 0. }
+      @param AColorNumber color number, counted from 0. }
     constructor CreateFromFile(const URL: string;
       const AColorNumber: Integer);
 
@@ -140,15 +144,21 @@ type
     destructor Destroy; override;
   end;
 
-procedure TGraph.CreateCommon(AColorNumber: Integer);
+procedure TGraph.UpdateColor;
 begin
   { calculate Color }
-  if AColorNumber < IloscGraphKol then
-    Color := ColorScheme^[TColorItem(Ord(ciGraph1) + AColorNumber)] else
+  if ColorNumber < GraphColorsInScheme then
+    Color := ColorScheme^[TColorItem(Ord(ciGraph1) + ColorNumber)] else
   repeat
     Color := Vector4(Random, Random, Random, 1.0);
     { Don't allow too dark colors, as they are not visible... }
   until GrayscaleValue(Color) >= 0.2;
+end;
+
+procedure TGraph.CreateCommon(const AColorNumber: Integer);
+begin
+  ColorNumber := AColorNumber;
+  UpdateColor;
 
   { initialize Points }
   Points := TXYList.Create;
@@ -425,7 +435,7 @@ end;
   and adds it to Graphs list.
   If loading graph from file fails, it will display nice MessageOK dialog.
 
-  It also takes care of setting AColorNumer parameter for TGraph.Create
+  It also takes care of setting AColorNumber parameter for TGraph.Create
   as it should be. }
 procedure GraphsAddFromFile(const URL: string);
 var
@@ -449,7 +459,7 @@ end;
   and adds it to Graphs list.
   If parsing expression fails, it will display nice MessageOK dialog.
 
-  It also takes care of setting AColorNumer parameter for TGraph.Create
+  It also takes care of setting AColorNumber parameter for TGraph.Create
   as it should be. }
 procedure GraphsAddFromExpression(const Expression: string;
   const X1, X2, XStep: string);
@@ -879,6 +889,9 @@ begin
     GraphsListMenu := M;
     Result.Append(M);
   M := TMenu.Create('_View');
+    M.Append(TMenuItem.Create('Dark Colors',  4000));
+    M.Append(TMenuItem.Create('Light Colors', 4010));
+    M.Append(TMenuSeparator.Create);
     for bo := Low(bo) to High(bo) do
      M.Append(TMenuItemChecked.Create(
        BoolOptionsMenuNames[bo], 900+Ord(bo), BoolOptionsKeys[bo],
@@ -993,6 +1006,14 @@ procedure MenuClick(Container: TUIContainer; Item: TMenuItem);
     HomeState;
   end;
 
+  procedure UpdateGraphColors;
+  var
+    G: TGraph;
+  begin
+    for G in Graphs do
+      G.UpdateColor;
+  end;
+
 var
   bo: TBoolOption;
 begin
@@ -1041,6 +1062,16 @@ begin
       begin
        with Graphs[Item.IntData-1000] do Visible := not Visible;
        Window.Invalidate;
+      end;
+    4000:
+      begin
+        ColorScheme := @ColorSchemeDark;
+        UpdateGraphColors;
+      end;
+    4010:
+      begin
+        ColorScheme := @ColorSchemeLight;
+        UpdateGraphColors;
       end;
     else Exit;
   end;
