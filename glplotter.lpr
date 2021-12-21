@@ -1126,7 +1126,7 @@ begin
         //Graphs.Add(TGraph.CreateFromExpression('x^2', -10, 10, 0.1, Graphs.Count));
       end;
 
-      { basic glw callbacks }
+      { basic Window callbacks }
       Window.OnUpdate := @Update;
       Window.OnResize := @Resize2D;
       Window.OnMotion := @Motion;
@@ -1136,7 +1136,7 @@ begin
       Window.MainMenu := GetMainMenu;
       Window.OnMenuClick := @MenuClick;
 
-      { other glw options }
+      { other Window options }
       Window.Caption := 'glplotter';
 
       Theme.MessageInputTextColor := Vector4(0, 0.4, 0, 1.0);
