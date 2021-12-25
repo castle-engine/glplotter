@@ -1,5 +1,6 @@
 *~
 *.o
+*.res
 glplotter
 glplotter.exe
 gen_function

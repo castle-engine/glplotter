@@ -8,5 +8,8 @@
   <data exists="false" />
   <package>
     <include path="COPYING.GPL2.txt" />
+    <include path="README.md" />
+    <include path="gen_function" executable_permission="True" />
+    <include path="gen_function.exe" executable_permission="True" />
   </package>
 </project>
