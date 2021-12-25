@@ -1,6 +1,6 @@
 { -*- compile-command: "castle-engine simple-compile gen_function.lpr" -*- }
 {
-  Copyright 2001-2017 Michalis Kamburelis.
+  Copyright 2001-2021 Michalis Kamburelis.
 
   This file is part of "gen_function".
 
@@ -41,10 +41,10 @@ program gen_function;
 {$apptype CONSOLE}
 
 uses SysUtils, CastleScript, CastleUtils, CastleScriptParser, CastleParameters,
-  CastleFilesUtils, CastleTimeUtils;
+  CastleFilesUtils, CastleTimeUtils, CastleApplicationProperties;
 
 const
-  Version = '1.0.5';
+  Version = '2.0.0';
 
 var
   expr: TCasScriptExpression;
@@ -53,6 +53,9 @@ var
   i: Int64;
   X, Y: TCasScriptFloat;
 begin
+  ApplicationProperties.ApplicationName := 'gen_function';
+  ApplicationProperties.Version := Version;
+
   { We use very simple approach to parsing parameters instead of using
     our Parameters.Parse. This way parameters starting with '-', like '-1.0 + 2.0',
     may be easily specified as mathematical expressions
@@ -70,7 +73,7 @@ begin
       HelpOptionHelp +nl+
       VersionOptionHelp +nl+
       nl+
-      SCastleEngineProgramHelpSuffix(ApplicationName, Version, true));
+      ApplicationProperties.Description);
     Halt;
   end else
   if Parameters.IsPresent(['-v', '--version']) then

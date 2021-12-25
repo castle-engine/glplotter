@@ -38,7 +38,7 @@ uses SysUtils, Generics.Collections, Math,
   CastleControlsImages, CastleDownload, CastleRenderContext, CastleApplicationProperties;
 
 const
-  Version = '1.2.5';
+  Version = '2.0.0';
 
 { colors -------------------------------------------------------------------- }
 
