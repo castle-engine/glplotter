@@ -23,8 +23,7 @@
 program glplotter;
 
 { TODO:
-  - format pliku: kolor= i specyfikacja koloru wykresu
-  - podawanie wlasnego kolor schema parametrami (albo plik ini ?)
+  - allow to specify own color in graph file as color= lines
 }
 
 {$ifdef MSWINDOWS} {$apptype GUI} {$endif}
