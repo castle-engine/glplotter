@@ -1,5 +1,5 @@
 {
-  Copyright 2001-2021 Michalis Kamburelis.
+  Copyright 2001-2022 Michalis Kamburelis.
 
   This file is part of "glplotter".
 
@@ -34,7 +34,7 @@ uses SysUtils, Generics.Collections, Math,
   CastleStringUtils, CastleFilesUtils, CastleScript, CastleScriptParser,
   CastleWindowRecentFiles, CastleGLImages, CastleColors, CastleUIControls,
   CastleConfig, CastleKeysMouse, CastleURIUtils, CastleControls,
-  CastleControlsImages, CastleDownload, CastleRenderContext, CastleApplicationProperties;
+  CastleDownload, CastleRenderContext, CastleApplicationProperties;
 
 const
   Version = '2.0.0';
@@ -57,38 +57,38 @@ const
 
   { zestawy kolorow : }
   ColorSchemeDark: TColorScheme =
-  ( (Data: (0.0 , 0.0 , 0.0 , 1.0)),
-    (Data: (0.33, 0.33, 1.0 , 1.0)),
-    (Data: (1.0 , 1.0 , 1.0 , 1.0)),
-    (Data: (0.0 , 0.11, 0.0 , 1.0)),
-    (Data: (0.0 , 0.33, 0.0 , 1.0)),
-    (Data: (0.0 , 0.66, 0.0 , 1.0)),
-    (Data: (0.66, 0.16, 0.0 , 1.0)),
-    (Data: (0.66, 0.16, 0.0 , 1.0)),
-    (Data: (0.66, 0.33, 0.0 , 1.0)),
-    (Data: (0   , 0.0 , 0.66, 1.0)),
-    (Data: (0   , 0.0 , 0.66, 1.0)),
-    (Data: (0.33, 0.33, 1.0 , 1.0)),
-    (Data: (1.0 , 1.0 , 0.33, 1.0)),
-    (Data: (1.0 , 0.0 , 0.0 , 1.0)),
-    (Data: (0.66, 0.66, 0.66, 1.0))
+  ( (X: 0.0 ; Y: 0.0 ; Z: 0.0 ; W: 1.0),
+    (X: 0.33; Y: 0.33; Z: 1.0 ; W: 1.0),
+    (X: 1.0 ; Y: 1.0 ; Z: 1.0 ; W: 1.0),
+    (X: 0.0 ; Y: 0.11; Z: 0.0 ; W: 1.0),
+    (X: 0.0 ; Y: 0.33; Z: 0.0 ; W: 1.0),
+    (X: 0.0 ; Y: 0.66; Z: 0.0 ; W: 1.0),
+    (X: 0.66; Y: 0.16; Z: 0.0 ; W: 1.0),
+    (X: 0.66; Y: 0.16; Z: 0.0 ; W: 1.0),
+    (X: 0.66; Y: 0.33; Z: 0.0 ; W: 1.0),
+    (X: 0   ; Y: 0.0 ; Z: 0.66; W: 1.0),
+    (X: 0   ; Y: 0.0 ; Z: 0.66; W: 1.0),
+    (X: 0.33; Y: 0.33; Z: 1.0 ; W: 1.0),
+    (X: 1.0 ; Y: 1.0 ; Z: 0.33; W: 1.0),
+    (X: 1.0 ; Y: 0.0 ; Z: 0.0 ; W: 1.0),
+    (X: 0.66; Y: 0.66; Z: 0.66; W: 1.0)
   );
   ColorSchemeLight: TColorScheme =
-  ( (Data: (1.0 , 1.0 , 1.0 , 1.0)),
-    (Data: (0.0 , 0.0 , 0.66, 1.0)),
-    (Data: (0.0 , 0.66, 0.0 , 1.0)),
-    (Data: (1.0 , 1.0 , 0.33, 1.0)),
-    (Data: (1.0 , 1.0 , 0.33, 1.0)),
-    (Data: (0.0 , 0.66, 0.0 , 1.0)),
-    (Data: (1.0 , 0.5 , 0.0 , 1.0)),
-    (Data: (1.0 , 0.5 , 0.0 , 1.0)),
-    (Data: (0.66, 0.33, 0.0 , 1.0)),
-    (Data: (1.0 , 0.5 , 0.0 , 1.0)),
-    (Data: (1.0 , 0.5 , 0.0 , 1.0)),
-    (Data: (1.0 , 0.5 , 0.0 , 1.0)),
-    (Data: (0.0 , 0.0 , 0.0 , 1.0)),
-    (Data: (0.0 , 0.66, 0.0 , 1.0)),
-    (Data: (0.66, 0.66, 0.66, 1.0))
+  ( (X: 1.0 ; Y: 1.0 ; Z: 1.0 ; W: 1.0),
+    (X: 0.0 ; Y: 0.0 ; Z: 0.66; W: 1.0),
+    (X: 0.0 ; Y: 0.66; Z: 0.0 ; W: 1.0),
+    (X: 1.0 ; Y: 1.0 ; Z: 0.33; W: 1.0),
+    (X: 1.0 ; Y: 1.0 ; Z: 0.33; W: 1.0),
+    (X: 0.0 ; Y: 0.66; Z: 0.0 ; W: 1.0),
+    (X: 1.0 ; Y: 0.5 ; Z: 0.0 ; W: 1.0),
+    (X: 1.0 ; Y: 0.5 ; Z: 0.0 ; W: 1.0),
+    (X: 0.66; Y: 0.33; Z: 0.0 ; W: 1.0),
+    (X: 1.0 ; Y: 0.5 ; Z: 0.0 ; W: 1.0),
+    (X: 1.0 ; Y: 0.5 ; Z: 0.0 ; W: 1.0),
+    (X: 1.0 ; Y: 0.5 ; Z: 0.0 ; W: 1.0),
+    (X: 0.0 ; Y: 0.0 ; Z: 0.0 ; W: 1.0),
+    (X: 0.0 ; Y: 0.66; Z: 0.0 ; W: 1.0),
+    (X: 0.66; Y: 0.66; Z: 0.66; W: 1.0)
   );
 
 var
@@ -323,7 +323,7 @@ const
 { inne zmienne globalne -------------------------------------------------- }
 
 var
-  Window: TCastleWindowBase;
+  Window: TCastleWindow;
 
   CustomSize: Single = 2.5;
 
@@ -1109,7 +1109,7 @@ begin
           '  --custom-size / -c SIZE' +nl+
           '                        Set size of custom grid' +nl+
           nl+
-          TCastleWindowBase.ParseParametersHelp(StandardParseOptions, true) +nl+
+          TCastleWindow.ParseParametersHelp(StandardParseOptions, true) +nl+
           nl+
           ApplicationProperties.Description);
         Halt;
@@ -1131,7 +1131,7 @@ begin
   ApplicationProperties.ApplicationName := 'glplotter';
   ApplicationProperties.Version := Version;
 
-  Window := TCastleWindowBase.Create(Application);
+  Window := TCastleWindow.Create(Application);
 
   { initialize RecentMenu }
   RecentMenu := TWindowRecentFiles.Create(nil);
@@ -1168,11 +1168,6 @@ begin
 
       { other Window options }
       Window.Caption := 'glplotter';
-
-      Theme.MessageInputTextColor := Vector4(0, 0.4, 0, 1.0);
-      Theme.MessageTextColor := Black;
-      Theme.ImagesPersistent[tiWindow].Image := WindowGray;
-      Theme.ImagesPersistent[tiWindow].OwnsImage := false;
 
       Window.Open;
       Application.Run;
