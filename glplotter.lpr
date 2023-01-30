@@ -1,5 +1,5 @@
 {
-  Copyright 2001-2022 Michalis Kamburelis.
+  Copyright 2001-2023 Michalis Kamburelis.
 
   This file is part of "glplotter".
 
@@ -1109,7 +1109,7 @@ begin
           '  --custom-size / -c SIZE' +nl+
           '                        Set size of custom grid' +nl+
           nl+
-          TCastleWindow.ParseParametersHelp(StandardParseOptions, true) +nl+
+          TCastleWindow.ParseParametersHelp +nl+
           nl+
           ApplicationProperties.Description);
         Halt;
