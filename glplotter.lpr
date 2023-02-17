@@ -1095,22 +1095,20 @@ begin
   case OptionNum of
     0:begin
         InfoWrite(
-          'glplotter: plot lines.' +nl+
-          nl+
-          'Call as' +nl+
-          '  glplotter [OPTION]... [FILE]...' +nl+
-          'Each FILE is filename (actually, an URL) or "-" (meaning stdin).' +nl+
-          nl+
-          'Available options are:' +nl+
-          HelpOptionHelp +nl+
-          VersionOptionHelp +nl+
-          '  --light               Set color scheme to light' +nl+
-          '  --drak                Set color scheme to dark' +nl+
-          '  --custom-size / -c SIZE' +nl+
-          '                        Set size of custom grid' +nl+
-          nl+
-          TCastleWindow.ParseParametersHelp +nl+
-          nl+
+          'glplotter: plot lines.' + NL +
+          NL +
+          'Call as' + NL +
+          '  glplotter [OPTION]... [FILE]...' + NL +
+          'Each FILE is filename (actually, an URL) or "-" (meaning stdin).' + NL +
+          NL +
+          'Available options are:' + NL +
+          OptionDescription('-h / --help', 'Print this help message and exit.') + NL +
+          OptionDescription('-v / --version', 'Print the version number and exit.') + NL +
+          OptionDescription('--light', 'Set color scheme to light') + NL +
+          OptionDescription('--dark', 'Set color scheme to dark') + NL +
+          OptionDescription('--custom-size / -c SIZE', 'Set size of custom grid') + NL +
+          TCastleWindow.ParseParametersHelp + NL +
+          NL +
           ApplicationProperties.Description);
         Halt;
       end;

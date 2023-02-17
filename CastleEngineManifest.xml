@@ -2,7 +2,7 @@
 <project name="glplotter"
   standalone_source="glplotter.lpr"
   author="Michalis Kamburelis"
-  qualified_name="net.sourceforge.castleengine.glplotter"
+  qualified_name="io.castleengine.glplotter"
   >
   <version value="2.0.0" code="2" />
   <data exists="false" />
