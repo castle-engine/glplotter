@@ -1,5 +1,5 @@
 {
-  Copyright 2001-2023 Michalis Kamburelis.
+  Copyright 2001-2024 Michalis Kamburelis.
 
   This file is part of "glplotter".
 
@@ -37,7 +37,7 @@ uses SysUtils, Generics.Collections, Math,
   CastleDownload, CastleRenderContext, CastleApplicationProperties;
 
 const
-  Version = '2.0.0';
+  Version = '2.1.0';
 
 { colors -------------------------------------------------------------------- }
 

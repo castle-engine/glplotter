@@ -4,7 +4,7 @@
   author="Michalis Kamburelis"
   qualified_name="io.castleengine.glplotter"
   >
-  <version value="2.0.0" code="2" />
+  <version value="2.1.0" code="3" />
   <data exists="false" />
   <package>
     <include path="COPYING.GPL2.txt" />

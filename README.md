@@ -4,7 +4,7 @@ glplotter draws graphs. It can generate graphs of various functions (you can spe
 
 This repository also includes `gen_function`, a command-line program that generates graph file from given function expression.
 
-Complete documentation on https://castle-engine.io/glplotter_and_gen_function.php .
+Complete documentation on https://castle-engine.io/glplotter.php .
 
 Using Castle Game Engine, see https://castle-engine.io/ .
 

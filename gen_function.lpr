@@ -1,6 +1,5 @@
-{ -*- compile-command: "castle-engine simple-compile gen_function.lpr" -*- }
 {
-  Copyright 2001-2021 Michalis Kamburelis.
+  Copyright 2001-2024 Michalis Kamburelis.
 
   This file is part of "gen_function".
 
@@ -44,7 +43,7 @@ uses SysUtils, CastleScript, CastleUtils, CastleScriptParser, CastleParameters,
   CastleFilesUtils, CastleTimeUtils, CastleApplicationProperties;
 
 const
-  Version = '2.0.0';
+  Version = '2.1.0';
 
 var
   expr: TCasScriptExpression;
