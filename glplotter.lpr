@@ -1156,7 +1156,6 @@ begin
 
       { basic Window callbacks }
       Window.OnUpdate := @Update;
-      Window.OnResize := @Resize2D;
       Window.OnMotion := @Motion;
       Window.OnRender := @Render;
 
