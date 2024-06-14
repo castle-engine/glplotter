@@ -114,6 +114,10 @@ jobs:
       # We clean and build gen_function separately, then we add it to glplotter
       # because "gen_function" and "gen_function.exe"
       # are listed in CastleEngineManifest.xml .
+      #
+      # TODO: gen_function is not packed into macOS zip, since the macOS is packed into .app bundle,
+      # there's no obvious place to add gen_function.
+      # Though we could place it inside bundle, like castle-model-converter in castle-model-viewer?
       - name: Build gen_function for macOS
         run: |
           rm -f gen_function gen_function.exe
