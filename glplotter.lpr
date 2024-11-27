@@ -487,9 +487,22 @@ begin
   Graphs.Add(G);
 end;
 
-{ registered window callbacks -------------------------------------------------- }
+{ view --------------------------------------------------------------------- }
 
-procedure Render(Container: TUIContainer);
+type
+  { View to contain whole UI and to handle events, like update and menu clicks. }
+  TMyView = class(TCastleView)
+  public
+    procedure MenuClick(const Item: TMenuItem);
+    procedure Update(const SecondsPassed: Single; var HandleInput: boolean); override;
+    function Motion(const Event: TInputMotion): Boolean; override;
+    procedure Render; override;
+  end;
+
+var
+  MyView: TMyView;
+
+procedure TMyView.Render;
 
   { Transform X, Y into graph coordinate-space. }
   function Transform2(const X, Y: Single): TVector2;
@@ -629,6 +642,8 @@ var
   TextY: Single;
   S: string;
 begin
+  inherited;
+
   RenderContext.Clear([cbColor], ColorScheme^[ciBG]);
 
   ShowGridNumScale(1, '%d',
@@ -676,10 +691,10 @@ begin
 
     for i := 0 to Graphs.Count-1 do
     begin
-      TextY += UIFont.RowHeight + 2;
+      TextY += UIFont.Height + 2;
       DrawPrimitive2D(pmLines, CrosshairStipple, [
-        Vector2(5 , TextY + UIFont.RowHeight / 2),
-        Vector2(15, TextY + UIFont.RowHeight / 2)
+        Vector2(5 , TextY + UIFont.Height / 2),
+        Vector2(15, TextY + UIFont.Height / 2)
       ], Graphs[i].Color);
       S := Format('%d - %s', [i, Graphs[i].Name]);
       if not Graphs[i].Visible then
@@ -692,12 +707,12 @@ end;
 var
   UpdateFirst: boolean = true;
 
-procedure Update(Container: TUIContainer);
+procedure TMyView.Update(const SecondsPassed: Single; var HandleInput: boolean);
 
   function SpeedFactor: Single;
   begin
-    Result := Window.Fps.SecondsPassed * 50; { to make everything time-based }
-    if Window.Pressed[keyCtrl] then Result *= 10;
+    Result := SecondsPassed * 50; { to make everything time-based }
+    if Container.Pressed[keyCtrl] then Result *= 10;
   end;
 
   procedure MultiplyGLScale(Multiplier: Single);
@@ -765,6 +780,8 @@ procedure Update(Container: TUIContainer);
   end;
 
 begin
+  inherited;
+
   if UpdateFirst then
   begin
     OpenGraphsFromParameters;
@@ -805,15 +822,16 @@ begin
   end;
 end;
 
-procedure Motion(Container: TUIContainer; const Event: TInputMotion);
+function TMyView.Motion(const Event: TInputMotion): Boolean;
 begin
+  Result := inherited;
+
   if buttonLeft in Event.Pressed then
   begin
     { zmien MoveX i MoveY o tyle o ile zmienila sie pozycja myszy od
       ostatniego Motion/Down }
     MoveX := MoveX + Event.Position[0] - Event.OldPosition[0];
     MoveY := MoveY + Event.Position[1] - Event.OldPosition[1];
-    Window.Invalidate;
   end;
 end;
 
@@ -913,7 +931,7 @@ var
   LastInputX2: string = '100';
   LastInputXStep: string = '0.1';
 
-procedure MenuClick(Container: TUIContainer; Item: TMenuItem);
+procedure TMyView.MenuClick(const Item: TMenuItem);
 
   procedure SetVisibleAll(Value: boolean);
   var i: Integer;
@@ -1130,6 +1148,7 @@ begin
   ApplicationProperties.Version := Version;
 
   Window := TCastleWindow.Create(Application);
+  Application.MainWindow := Window;
 
   { initialize RecentMenu }
   RecentMenu := TWindowRecentFiles.Create(nil);
@@ -1154,14 +1173,12 @@ begin
         //Graphs.Add(TGraph.CreateFromExpression('x^2', -10, 10, 0.1, Graphs.Count));
       end;
 
-      { basic Window callbacks }
-      Window.OnUpdate := @Update;
-      Window.OnMotion := @Motion;
-      Window.OnRender := @Render;
+      MyView := TMyView.Create(Application);
+      Window.Container.View := MyView;
 
       { setup menu }
       Window.MainMenu := GetMainMenu;
-      Window.OnMenuClick := @MenuClick;
+      Window.OnMenuItemClick := {$ifdef FPC}@{$endif} MyView.MenuClick;
 
       { other Window options }
       Window.Caption := 'glplotter';
